@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+
+const package = require('../package')
+const program = require('commander')
+const chalk = require('chalk')
+
+program
+  .version(package.version)
+  .description(package.description)
+  .usage('<command> [options]')
+
+program
+  .command('init')
+  .alias('i')
+  .description('Creates a new blueprint directory')
+  .action(() => {
+
+  })
+
+program
+  .command('generate')
+  .alias('g')
+  .description('Creates static files from a blueprint')
+  .action(() => {
+
+  })
+
+program.parse(process.argv)
+
+if (!program.args.length) {
+  program.outputHelp()
+} else {
+  // error on invalid commands
+  const validCommands = [].concat.apply([],
+    program.commands.map(cmd => [ cmd.name(), cmd.alias() ])
+  )
+  let command = program.args[0]
+  if (!validCommands.includes(command)) {
+    let me = 'blue'
+    console.log(
+      `${me}: '${command}' is not a valid ${me} command. See '${me} --help'`
+    )
+  }
+}
+
