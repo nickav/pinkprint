@@ -23,6 +23,7 @@
     "commander": "^2.9.0",
     "consolidate": "^0.14.5",
     "handlebars": "^4.0.6",
+    "handlebars-helpers": "^0.8.2",
     "metalsmith": "^2.3.0",
     "mkdirp": "^0.5.1"
   },
