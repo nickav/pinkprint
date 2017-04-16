@@ -28,8 +28,10 @@ program
   .alias('g')
   .description('Creates static files from a blueprint')
   .option('-f, --force', 'Overwrite any existing files')
-  .option('-d, --dry', 'Preview of what will happen without creating anything.')
-  .action((template, name) => lib.generate(TEMPLATE_DIR, template, name))
+  .option('-p, --preview', 'Preview of what will happen')
+  .action((template, name, options) => {
+    lib.generate(TEMPLATE_DIR, template, name, options)
+  })
 
 program.parse(process.argv)
 
