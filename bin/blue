@@ -4,29 +4,31 @@ const program = require('commander')
 const package = require('../package')
 const lib = require('../lib')
 
+const TEMPLATE_DIR = '.blueprint'
+
 program
   .version(package.version)
   .description(package.description)
   .usage('<command> [options]')
 
 program
-  .command('init')
-  .alias('i')
-  .description('Creates a new blueprint directory')
-  .action(() => lib.init())
+  .command('new <template>')
+  .alias('n')
+  .description('Creates a new blueprint')
+  .action((template) => lib.create(TEMPLATE_DIR, template))
 
 program
   .command('generate <template> <name>')
   .alias('g')
   .description('Creates static files from a blueprint')
-  .action((template, name) => lib.generate(template, name))
+  .option('-f, --force', 'Overwrite any existing files')
+  .option('-d, --dry', "Preview of what will happen, doesn't create any files.")
+  .action((template, name) => lib.generate(TEMPLATE_DIR, template, name))
 
 program.parse(process.argv)
 
-if (!program.args.length) {
-  program.outputHelp()
-} else {
-  // error on invalid commands
+// error on invalid commands
+if (program.args.length) {
   let command = program.args[program.args.length - 1]
   if (typeof command !== 'object') {
     let me = 'blue'
@@ -34,5 +36,6 @@ if (!program.args.length) {
       `${me}: '${command}' is not a valid ${me} command. See '${me} --help'`
     )
   }
+} else {
+  program.outputHelp()
 }
-
