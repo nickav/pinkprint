@@ -18,11 +18,17 @@ program
   .action((template) => lib.create(TEMPLATE_DIR, template))
 
 program
+  .command('list [template]')
+  .alias('l')
+  .description('Shows all available blueprints')
+  .action((template) => lib.list(TEMPLATE_DIR))
+
+program
   .command('generate <template> <name>')
   .alias('g')
   .description('Creates static files from a blueprint')
   .option('-f, --force', 'Overwrite any existing files')
-  .option('-d, --dry', "Preview of what will happen, doesn't create any files.")
+  .option('-d, --dry', 'Preview of what will happen without creating anything.')
   .action((template, name) => lib.generate(TEMPLATE_DIR, template, name))
 
 program.parse(process.argv)
