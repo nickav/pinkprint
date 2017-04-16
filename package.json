@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nickaversano/blueprint.js.git"
+    "url": "git+https://github.com/nickaversano/blueprint.git"
   },
   "scripts": {
     "lint": "standard",
