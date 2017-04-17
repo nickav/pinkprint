@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+const path = require('path')
 const program = require('commander')
 const package = require('../package')
 const lib = require('../lib')
+const findRoot = require('../lib/helpers/find-root')
 
-const TEMPLATE_DIR = 'blueprints'
+const TEMPLATE_DIRS = [ 'blueprints', '.blueprint' ]
 
 program
   .version(package.version)
@@ -12,16 +14,16 @@ program
   .usage('<command> [options]')
 
 program
-  .command('new <template>')
+  .command('new <name>')
   .alias('n')
   .description('Creates a new blueprint')
-  .action((template) => lib.create(TEMPLATE_DIR, template))
+  .action((template) => lib.create(findRoot(TEMPLATE_DIRS, false), template))
 
 program
   .command('list [template]')
   .alias('l')
   .description('Shows all available blueprints')
-  .action((template) => lib.list(TEMPLATE_DIR, template))
+  .action((template) => lib.list(findRoot(TEMPLATE_DIRS), template))
 
 program
   .command('generate <template> <name> [args...]')
@@ -30,7 +32,9 @@ program
   .option('-f, --force', 'Overwrite any existing files')
   .option('-p, --preview', 'Preview of what will happen')
   .action((template, name, args, options) => {
-    lib.generate(TEMPLATE_DIR, template, name, args, options)
+    let src = findRoot(TEMPLATE_DIRS)
+    let dest = path.resolve(src, '..')
+    lib.generate(src, dest, template, name, args, options)
   })
 
 program.parse(process.argv)
