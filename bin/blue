@@ -4,7 +4,7 @@ const program = require('commander')
 const package = require('../package')
 const lib = require('../lib')
 
-const TEMPLATE_DIR = '.blueprint'
+const TEMPLATE_DIR = 'blueprints'
 
 program
   .version(package.version)
