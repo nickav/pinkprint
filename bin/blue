@@ -2,28 +2,28 @@
 
 const path = require('path')
 const program = require('commander')
-const package = require('../package')
+const packageJson = require('../package')
 const lib = require('../lib')
 const findRoot = require('../lib/helpers/find-root')
 
-const TEMPLATE_DIRS = [ 'blueprints', '.blueprint' ]
+const TEMPLATE_DIRS = ['blueprints', '.blueprint']
 
 program
-  .version(package.version)
-  .description(package.description)
+  .version(packageJson.version)
+  .description(packageJson.description)
   .usage('<command> [options]')
 
 program
   .command('new <name>')
   .alias('n')
   .description('Creates a new blueprint')
-  .action((template) => lib.create(findRoot(TEMPLATE_DIRS, false), template))
+  .action(template => lib.create(findRoot(TEMPLATE_DIRS, false), template))
 
 program
   .command('list [template]')
   .alias('l')
   .description('Shows all available blueprints')
-  .action((template) => lib.list(findRoot(TEMPLATE_DIRS), template))
+  .action(template => lib.list(findRoot(TEMPLATE_DIRS), template))
 
 program
   .command('generate <template> <name> [args...]')

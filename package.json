@@ -11,7 +11,7 @@
     "url": "git+https://github.com/nickaversano/blueprint.git"
   },
   "scripts": {
-    "lint": "standard",
+    "format": "node_modules/.bin/prettier --single-quote --no-semi --write \"{lib,test}/**/*.js\" bin/*",
     "test": "mocha"
   },
   "author": "Nick Aversano",
@@ -22,6 +22,7 @@
     "colors": "^1.1.2",
     "commander": "^2.9.0",
     "consolidate": "^0.14.5",
+    "global": "^4.3.1",
     "handlebars": "^4.0.6",
     "handlebars-helpers": "^0.8.2",
     "humps": "^2.0.0",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "mocha": "^3.2.0",
+    "prettier": "^1.1.0",
     "rimraf": "^2.6.1",
     "standard": "^10.0.2"
   }
