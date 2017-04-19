@@ -29,8 +29,8 @@ program
   .command('generate <template> <name> [args...]')
   .alias('g')
   .description('Creates static files from a blueprint')
-  .option('-f, --force', 'Overwrite any existing files')
   .option('-p, --preview', 'Preview of what will happen')
+  .option('-s, --skip-overwrites', 'Skip overwriting existing files.')
   .action((template, name, args, options) => {
     let src = findRoot(TEMPLATE_DIRS)
     let dest = path.resolve(src, '..')
