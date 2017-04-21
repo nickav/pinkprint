@@ -2,22 +2,23 @@
 
 const path = require('path')
 const program = require('commander')
-const packageJson = require('../package')
+const packageConfig = require('../package')
 const lib = require('../lib')
+const assert = require('../lib/helpers/assert')
 const findRoot = require('../lib/helpers/find-root')
 
 const TEMPLATE_DIRS = ['blueprints', '.blueprint']
 
 program
-  .version(packageJson.version)
-  .description(packageJson.description)
+  .version(packageConfig.version)
+  .description(packageConfig.description)
   .usage('<command> [options]')
 
 program
   .command('new <name>')
   .alias('n')
   .description('Creates a new blueprint')
-  .action(template => lib.create(findRoot(TEMPLATE_DIRS, false), template))
+  .action(name => lib.create(findRoot(TEMPLATE_DIRS, false), name))
 
 program
   .command('list [template]')
@@ -34,7 +35,7 @@ program
   .action((template, name, args, options) => {
     let src = findRoot(TEMPLATE_DIRS)
     let dest = path.resolve(src, '..')
-    lib.generate(src, dest, template, name, args, options)
+    lib.generate(path.join(src, template), dest, name, args, options)
   })
 
 program.parse(process.argv)
@@ -42,12 +43,11 @@ program.parse(process.argv)
 // error on invalid commands
 if (program.args.length) {
   let command = program.args[program.args.length - 1]
-  if (typeof command !== 'object') {
-    let me = 'blue'
-    console.log(
-      `${me}: '${command}' is not a valid ${me} command. See '${me} --help'`
-    )
-  }
+  let me = 'blue'
+  assert(
+    typeof command === 'object',
+    `'${command}' is not a valid ${me} command. See '${me} --help'`
+  )
 } else {
   program.outputHelp()
 }
