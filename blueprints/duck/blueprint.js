@@ -1,7 +1,7 @@
 const path = require('path')
 
 exports.before = (context, blueprint) => {
-  let dir = path.join(context.root, context.path)
+  let dir = path.join(context.dest, context.path)
   let files = blueprint.helpers.readdir(dir)
     .filter(file => !/\.js$/.test(file))
 
