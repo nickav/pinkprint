@@ -23,6 +23,7 @@
     "commander": "^2.9.0",
     "consolidate": "^0.14.5",
     "handlebars": "^4.0.6",
+    "helper-date": "^0.2.3",
     "humps": "^2.0.0",
     "metalsmith": "^2.3.0"
   },
