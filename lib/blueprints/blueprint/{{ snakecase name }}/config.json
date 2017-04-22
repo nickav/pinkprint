@@ -1,2 +1,3 @@
 {
+  "path": "src/{{ kebobcase name }}"
 }
