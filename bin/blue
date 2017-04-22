@@ -31,7 +31,8 @@ program
   .alias('g')
   .description('Creates static files from a blueprint')
   .option('-p, --preview', 'Preview of what will happen')
-  .option('-s, --skip-overwrites', 'Skip overwriting existing files.')
+  .option('-s, --skip-overwrites', 'Skip overwriting existing files')
+  .option('-v, --verbose', 'Enable verbose logging')
   .action((template, name, args, options) => {
     let src = findRoot(TEMPLATE_DIRS)
     let dest = path.resolve(src, '..')
