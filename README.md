@@ -29,19 +29,28 @@ Blueprint templates are written in [Handlebars](handlebars). And have the
 following structure:
 
 ```bash
-├── config.json          # config vars available in any template
-├── blueprint.js         # hooks that allow you to add your own behavior
-├── README.md            # how to use your template
-├── generate/            # Webpack builds the static site into this directory
-├── partials/            # Handlebars partials will be auto-registered
+├── config.json     # config vars available in any template
+├── blueprint.js    # hooks that allow you to add your own behavior
+├── README.md       # how to use your template
+├── generate/       # Webpack builds the static site into this directory
+├── partials/       # Handlebars partials will be auto-registered
 ```
 
 ### Variables
-Every blueprint has access to the default context variables:
+Every blueprint template has access to the default context variables:
 ```
-{ author, args, name, src, dest, path }
+author   # the git author { name, email }
+args     # array of arguments passed
+name     # the first required argument
+src      # the source blueprint directory
+dest     # the destination (project root)
+path     # relative path from dest
 ```
 In addition to any variables in `config.json`.
+
+### Helpers
+There are several built-in Handlebars [helpers](./lib/helpers/handlebars.js).
+You can also register more in the before hook.
 
 ### Hooks
 If you want to add your own custom behavior, you can hook into blueprint to add
@@ -50,22 +59,24 @@ your own behavior. Simply add whatever hooks you want to your template's
 
 The following hooks are available: `before` and `after`.
 
-#### exports.before(context, blueprint)
-The before hook gets run before the templates files are generated. This is a
-good place to add extra variables to the context, register handlebars helpers
+#### exports.before(blueprint)
+The before hook gets run before the templates files are generated.
+
+A good place to add extra variables to the context, register handlebars helpers
 and so on.
 
-#### exports.after(context, blueprint)
+#### exports.after(blueprint)
 This gets run after the template files are generated successfully.
 
 #### The blueprint object
 The blueprint object has the following properties:
 ```
-  use: metalsmith.use,
-  ignore: metalsmith.ignore,
-  handlebars: Handlebars,
-  helpers,
-  options
+context       # Handlebars context variables
+handlebars    # Handlebars object
+helpers       # blueprints built-in helpers
+ignore        # alias for metalsmith.ignore
+options       # any command-line options
+use           # alias for metalsmith.use
 ```
 
 [handlebars]: http://handlebarsjs.com/
