@@ -4,7 +4,7 @@ blueprint
 #### _Auto-generate project files._
 
 An easy way to quickly generate project files. Based on
-[Metalsmith](metalsmith). Inspired by `rails generate`.
+[Metalsmith][metalsmith]. Inspired by `rails generate`.
 
 ## Install
 
@@ -27,7 +27,7 @@ template.
 
 ## Writing templates
 
-Blueprint templates are written in [Handlebars](handlebars) and have the
+Blueprint templates are written in [Handlebars][handlebars] and have the
 following structure:
 
 ```bash
@@ -92,5 +92,4 @@ use           // alias for metalsmith.use
 [handlebars]: http://handlebarsjs.com/
 [metalsmith]: https://github.com/segmentio/metalsmith
 [prettier]: https://github.com/prettier/prettier
-[standard]: http://standardjs.com/
 [yarn-install]: https://yarnpkg.com/lang/en/docs/install/
