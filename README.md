@@ -32,7 +32,7 @@ following structure:
 
 ```bash
 ├── config.json     # config vars available in any template
-├── blueprint.js    # hooks that allow you to add your own behavior
+├── hooks.js        # hooks that allow you to add your own behavior
 ├── README.md       # how to use your template
 ├── generate/       # anything here will be created when running generate
 ├── partials/       # Handlebars partials will be auto-registered
@@ -61,7 +61,7 @@ You can also register more in the before hook.
 
 If you want to add your own custom behavior, you can hook into blueprint to add
 your own behavior. Simply export whatever hooks from your template's
-`blueprint.js`.
+`hooks.js`.
 
 The following hooks are available:
 
