@@ -4,8 +4,8 @@ const path = require('path')
 const program = require('commander')
 const packageConfig = require('../package')
 const lib = require('../lib')
-const assert = require('../lib/helpers/assert')
 const findRoot = require('../lib/helpers/find-root')
+const helpers = require('../lib/helpers/handlebars')
 
 const TEMPLATE_DIRS = ['blueprints', '.blueprint']
 
@@ -24,7 +24,7 @@ program
   .command('list [template]')
   .alias('l')
   .description('Shows all available blueprints')
-  .action(template => lib.list(findRoot(TEMPLATE_DIRS), template))
+  .action(template => lib.list(findRoot(TEMPLATE_DIRS), true))
 
 program
   .command('generate <template> <name> [args...]')
@@ -39,16 +39,42 @@ program
     lib.generate(path.join(src, template), dest, name, args, options)
   })
 
+program
+  .command('* <template> [name] [args...]')
+  .description('Shorthand for generate')
+  .option('-h, --help', 'Show help')
+  .option('-p, --preview', 'Show help')
+  .action((template, name, args, options) => {
+    let src = findRoot(TEMPLATE_DIRS)
+    let templates = lib.list(src, false)
+
+    // error on invalid commands
+    if (!templates.includes(template)) {
+      return invalidCommand(template)
+    }
+
+    // show help
+    let templateSrc = path.join(src, template)
+    if (!name || options.help) {
+      let help = ['README', 'README.md', 'README.txt']
+        .map(file => helpers.readfile(path.join(templateSrc, file)).trim())
+        .find(file => file)
+      return console.log(
+        help ? `\n${help}\n` : `No README found in: ${templateSrc}`
+      )
+    }
+
+    let dest = path.resolve(src, '..')
+    lib.generate(templateSrc, dest, name, args, {})
+  })
+
 program.parse(process.argv)
 
-// error on invalid commands
-if (program.args.length) {
-  let command = program.args[program.args.length - 1]
-  let me = 'blue'
-  assert(
-    typeof command === 'object',
-    `'${command}' is not a valid ${me} command. See '${me} --help'`
-  )
-} else {
+if (!program.args.length) {
   program.outputHelp()
+}
+
+function invalidCommand(command) {
+  let me = 'blue'
+  console.log(`'${command}' is not a valid ${me} command. See '${me} --help'`)
 }
