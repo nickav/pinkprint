@@ -42,9 +42,7 @@ program
 program
   .command('* <template> [name] [args...]')
   .description('Shorthand for generate')
-  .option('-h, --help', 'Show help')
-  .option('-p, --preview', 'Show help')
-  .action((template, name, args, options) => {
+  .action((template, name, args) => {
     let src = findRoot(TEMPLATE_DIRS)
     let templates = lib.list(src, false)
 
@@ -55,7 +53,7 @@ program
 
     // show help
     let templateSrc = path.join(src, template)
-    if (!name || options.help) {
+    if (!name) {
       let help = ['README', 'README.md', 'README.txt']
         .map(file => helpers.readfile(path.join(templateSrc, file)).trim())
         .find(file => file)
