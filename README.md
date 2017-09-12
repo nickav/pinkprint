@@ -1,4 +1,4 @@
-pinkprint
+![pink](/pink.png) pinkprint
 ========================================
 
 #### _Auto-generate project files._
@@ -8,18 +8,21 @@ An easy way to quickly generate project files. Based on
 
 ## Install
 
-TODO
+Install [yarn][yarn-install]. Then run:
+```bash
+> yarn add pinkprint
+```
 
 ### Create a new pinkprint
 
-```
+```bash
 > pink new component
 ```
 This will create a template folder in your project root `pinkprints/component`.
 
 ### Generate files from a pinkprint
 
-```
+```bash
 > pink generate component foobar
 ```
 This will create all files within the `generate` folder of the `component`
@@ -59,9 +62,8 @@ You can also register more in the before hook.
 
 ### Hooks
 
-If you want to add your own custom behavior, you can hook into pinkprint to add
-your own behavior. Simply export whatever hooks from your template's
-`hooks.js`.
+If you want to add your own custom behavior, pinkprint exposes a few lifecycle
+methods. Simply export the hooks from your template's `hooks.js`.
 
 The following hooks are available:
 
