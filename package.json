@@ -1,14 +1,14 @@
 {
-  "name": "blueprint",
+  "name": "pinkprint",
   "version": "0.0.1",
-  "description": "A simple command-line tool for generating files.",
+  "description": "command-line tool for generating files",
   "main": "lib/index.js",
   "bin": {
-    "blue": "bin/blue"
+    "pink": "bin/pink"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nickaversano/blueprint.git"
+    "url": "git+https://github.com/nickaversano/pinkprint.git"
   },
   "scripts": {
     "format": "node_modules/.bin/prettier --single-quote --no-semi --write \"{lib,test}/**/*.js\" bin/*",

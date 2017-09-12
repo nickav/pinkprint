@@ -1,4 +1,4 @@
-blueprint
+pinkprint
 ========================================
 
 #### _Auto-generate project files._
@@ -10,24 +10,24 @@ An easy way to quickly generate project files. Based on
 
 TODO
 
-### Create a new blueprint
+### Create a new pinkprint
 
 ```
-> blue new component
+> pink new component
 ```
-This will create a template folder in your project root `blueprints/component`.
+This will create a template folder in your project root `pinkprints/component`.
 
-### Generate files from a blueprint
+### Generate files from a pinkprint
 
 ```
-> blue generate component foobar
+> pink generate component foobar
 ```
 This will create all files within the `generate` folder of the `component`
 template.
 
 ## Writing templates
 
-Blueprint templates are written in [Handlebars][handlebars] and have the
+Pinkprint templates are written in [Handlebars][handlebars] and have the
 following structure:
 
 ```bash
@@ -40,13 +40,13 @@ following structure:
 
 ### Variables
 
-Every blueprint template has access to the default context variables:
+Every pinkprint template has access to the default context variables:
 
 ```javascript
 author   // the git author { name, email }
 args     // array of arguments passed
 name     // the first required argument
-src      // the source blueprint directory
+src      // the source pinkprint directory
 dest     // the destination (project root)
 path     // relative path from dest
 ```
@@ -59,31 +59,31 @@ You can also register more in the before hook.
 
 ### Hooks
 
-If you want to add your own custom behavior, you can hook into blueprint to add
+If you want to add your own custom behavior, you can hook into pinkprint to add
 your own behavior. Simply export whatever hooks from your template's
 `hooks.js`.
 
 The following hooks are available:
 
-#### before(blueprint)
+#### before(pinkprint)
 
 The before hook gets run before the templates files are generated.
 
 A good place to add extra variables to the context, register handlebars helpers
 and so on.
 
-#### after(blueprint)
+#### after(pinkprint)
 
 This gets run after the template files are generated successfully.
 
-#### blueprint
+#### pinkprint
 
-The blueprint object has the following properties:
+The pinkprint object has the following properties:
 
 ```javascript
 context       // Handlebars context variables
 handlebars    // Handlebars object
-helpers       // blueprints built-in helpers
+helpers       // pinkprint built-in helpers
 ignore        // alias for metalsmith.ignore
 options       // any command-line options
 use           // alias for metalsmith.use
