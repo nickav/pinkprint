@@ -1,79 +1,53 @@
 #!/usr/bin/env node
 
 const path = require('path')
-const program = require('commander')
+const yargs = require('yargs');
 const packageConfig = require('../package')
 const lib = require('../lib')
 const findRoot = require('../lib/helpers/find-root')
-const helpers = require('../lib/helpers/handlebars')
 
-const TEMPLATE_DIRS = ['pinkprints', '.pinkprints']
+const TEMPLATE_DIRS = ['pinkprints', '.pinkprint']
+const me = path.basename(__filename)
 
-program
-  .version(packageConfig.version)
-  .description(packageConfig.description)
-  .usage('<command> [options]')
-
-// TODO: accept input files as arguments
-program
-  .command('new <name>')
-  .alias('n')
-  .description('Creates a new pinkprint')
-  .action(name => lib.create(findRoot(TEMPLATE_DIRS, false), name))
-
-program
-  .command('list [template]')
-  .alias('l')
-  .description('Shows all available pinkprints')
-  .action(template => lib.list(findRoot(TEMPLATE_DIRS), true))
-
-program
-  .command('generate <template> <name> [args...]')
-  .alias('g')
-  .description('Creates static files from a pinkprint')
-  .option('-p, --preview', 'Preview of what will happen')
-  .option('-s, --skip-overwrites', 'Skip overwriting existing files')
-  .option('-v, --verbose', 'Enable verbose logging')
-  .action((template, name, args, options) => {
-    let src = findRoot(TEMPLATE_DIRS)
-    let dest = path.resolve(src, '..')
-    lib.generate(path.join(src, template), dest, name, args, options)
-  })
-
-program
-  .command('* <template> [name] [args...]')
-  .description('Shorthand for generate')
-  .action((template, name, args) => {
-    let src = findRoot(TEMPLATE_DIRS)
-    let templates = lib.list(src, false)
-
-    // error on invalid commands
-    if (!templates.includes(template)) {
-      return invalidCommand(template)
-    }
-
-    // show help
-    let templateSrc = path.join(src, template)
-    if (!name) {
-      let help = ['README', 'README.md', 'README.txt']
-        .map(file => helpers.readfile(path.join(templateSrc, file)).trim())
-        .find(file => file)
-      return console.log(
-        help ? `\n${help}\n` : `No README found in: ${templateSrc}`
-      )
-    }
-
-    let dest = path.resolve(src, '..')
-    lib.generate(templateSrc, dest, name, args, {})
-  })
-
-program.parse(process.argv)
-
-if (!program.args.length) {
-  program.outputHelp()
+const invalidCommand = (argv) => {
+  const cmd = argv._[0]
+  console.log(`'${cmd}' is not a valid ${me} command. See '${me} --help'`)
 }
 
-function invalidCommand(command) {
-  const me = path.basename(__filename)
-  console.log(`'${command}' is not a valid ${me} command. See '${me} --help'`)
-}
+yargs
+  .command(['new <name>', 'n'], 'Creates a new pinkprint', () => {}, argv =>
+    lib.create(findRoot(TEMPLATE_DIRS, false), argv.name)
+  )
+
+  .command(['list', 'l'], 'Shows all pinkprints', () => {}, argv =>
+    lib.list(findRoot(TEMPLATE_DIRS, true))
+  )
+
+  .command(
+    ['generate <template> <name> [args..]', 'g'],
+    'Creates files from a pinkprint template',
+    yargs => {
+      yargs.option('preview', {
+        describe: 'Preview without modifying any files',
+        alias: 'p',
+        default: false
+      })
+    },
+    argv => {
+      let src = findRoot(TEMPLATE_DIRS)
+      let dest = path.resolve(src, '..')
+      lib.generate(path.join(src, argv.template), dest, argv.name, argv)
+    }
+  )
+
+  .option('verbose', {
+    describe: 'Print verbose output',
+    default: false
+  })
+  .help('help')
+  .version('version', packageConfig.version)
+  .alias('version', 'v')
+
+  .usage(`Usage: ${me} <command> [options]`)
+  .command('*', '', () => {}, invalidCommand)
+  .argv;
