@@ -30,7 +30,7 @@ template.
 
 ## Writing templates
 
-Pinkprint templates are written in [Handlebars][handlebars] and have the
+Pinkprint templates are written in [ejs][ejs] and have the
 following structure:
 
 ```bash
@@ -38,7 +38,6 @@ following structure:
 ├── hooks.js        # hooks that allow you to add your own behavior
 ├── README.md       # how to use your template
 ├── generate/       # anything here will be created when running generate
-├── partials/       # Handlebars partials will be auto-registered
 ```
 
 ### Variables
@@ -46,18 +45,19 @@ following structure:
 Every pinkprint template has access to the default context variables:
 
 ```javascript
+$        // alias for helpers
 author   // the git author { name, email }
-args     // array of arguments passed
-name     // the first required argument
+argv     // object of cli arguments
+name     // the name of the new pinkprint
 src      // the source pinkprint directory
-dest     // the destination (project root)
+dest     // the destination
 path     // relative path from dest
 ```
 In addition to any variables in `config.json`.
 
 ### Helpers
 
-There are several built-in Handlebars [helpers](./lib/helpers/handlebars.js).
+There are several built-in [helpers](./lib/helpers/helpers.js).
 You can also register more in the before hook.
 
 ### Hooks
@@ -71,8 +71,7 @@ The following hooks are available:
 
 The before hook gets run before the templates files are generated.
 
-A good place to add extra variables to the context, register handlebars helpers
-and so on.
+A good place to add extra variables to the context, register helpers and so on.
 
 #### after(pinkprint)
 
@@ -83,15 +82,16 @@ This gets run after the template files are generated successfully.
 The pinkprint object has the following properties:
 
 ```javascript
-context       // Handlebars context variables
-handlebars    // Handlebars object
+context       // context variables
 helpers       // pinkprint built-in helpers
+hooks         // registered hooks
 ignore        // alias for metalsmith.ignore
+metalsmith    // the metalsmith instance
 options       // any command-line options
 use           // alias for metalsmith.use
 ```
 
-[handlebars]: http://handlebarsjs.com/
+[ejs]: https://github.com/tj/ejs
 [metalsmith]: https://github.com/segmentio/metalsmith
 [prettier]: https://github.com/prettier/prettier
 [yarn-install]: https://yarnpkg.com/lang/en/docs/install/
