@@ -91,7 +91,7 @@ options       // any command-line options
 use           // alias for metalsmith.use
 ```
 
-[ejs]: https://github.com/tj/ejs
+[ejs]: http://ejs.co/
 [metalsmith]: https://github.com/segmentio/metalsmith
 [prettier]: https://github.com/prettier/prettier
 [yarn-install]: https://yarnpkg.com/lang/en/docs/install/

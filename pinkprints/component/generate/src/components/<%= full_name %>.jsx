@@ -22,6 +22,7 @@ import { withRouter } from 'react-router-dom';
 // Style -----------------------------------------------------------------------
 import style from '@/style/<%= full_name %>.scss';
 <% } -%>
+//------------------------------------------------------------------------------
 // React Class -----------------------------------------------------------------
 class <%= name %> extends React.Component {
     render() {
