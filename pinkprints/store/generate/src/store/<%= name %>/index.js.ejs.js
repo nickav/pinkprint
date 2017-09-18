@@ -1,6 +1,6 @@
 /* */
 // Types
-export const ACTION = '<%= name %>/ACTION'
+export const ACTION = '<%= name %>/ACTION';
 
 /* */
 // Action Creators

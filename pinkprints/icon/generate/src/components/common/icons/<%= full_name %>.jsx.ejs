@@ -1,7 +1,7 @@
 /******************************************************************************\
 * File: <%= name %>.jsx
 *
-* Author: <%= author.name %>
+* Author: Gigster
 *
 * Description: <%= argv.description %>
 *
