@@ -12,6 +12,7 @@
   },
   "scripts": {
     "format": "node_modules/.bin/prettier --single-quote --no-semi --write \"{lib,test}/**/*.js\" bin/*",
+    "g": "bin/pink g",
     "test": "mocha"
   },
   "author": "Nick Aversano",
