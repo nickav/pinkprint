@@ -1,6 +1,6 @@
 {
   "name": "pinkprint",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "command-line tool for generating files",
   "main": "lib/index.js",
   "bin": {
@@ -26,6 +26,7 @@
     "helper-date": "^0.2.3",
     "humps": "^2.0.0",
     "metalsmith": "^2.3.0",
+    "pluralize": "^8.0.0",
     "yargs": "^8.0.2"
   },
   "devDependencies": {
