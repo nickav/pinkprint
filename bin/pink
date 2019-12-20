@@ -1,53 +1,48 @@
 #!/usr/bin/env node
 
-const path = require('path')
+const path = require('path');
 const yargs = require('yargs');
-const packageConfig = require('../package')
-const lib = require('../lib')
-const findRoot = require('../lib/helpers/find-root')
+const packageConfig = require('../package');
 
-const TEMPLATE_DIRS = ['pinkprints', '.pinkprint']
-const me = path.basename(__filename)
+const me = path.basename(__filename);
 
 const invalidCommand = (argv) => {
-  const cmd = argv._[0]
-  console.log(`'${cmd}' is not a valid ${me} command. See '${me} --help'`)
-}
+  const cmd = argv._[0];
+  console.log(`'${cmd}' is not a valid ${me} command. See '${me} --help'`);
+};
 
 yargs
   .command(['new <name>', 'n'], 'Creates a new pinkprint', () => {}, argv =>
     lib.create(findRoot(TEMPLATE_DIRS, false), argv.name)
   )
 
-  .command(['list', 'l'], 'Shows all pinkprints', () => {}, argv =>
-    lib.list(findRoot(TEMPLATE_DIRS, true))
+  .command(
+    ['list', 'l'],
+    'List all commands',
+    () => {},
+    (argv) => console.log('not implemented')
   )
 
   .command(
     ['generate <template> <name> [args..]', 'g'],
     'Creates files from a pinkprint template',
-    yargs => {
+    (yargs) => {
       yargs.option('preview', {
         describe: 'Preview without modifying any files',
         alias: 'p',
-        default: false
-      })
+        default: false,
+      });
     },
-    argv => {
-      let src = findRoot(TEMPLATE_DIRS)
-      let dest = path.resolve(src, '..')
-      lib.generate(path.join(src, argv.template), dest, argv.name, argv)
-    }
+    (argv) => console.log('not implemented')
   )
 
   .option('verbose', {
     describe: 'Print verbose output',
-    default: false
+    default: false,
   })
   .help('help')
   .version('version', packageConfig.version)
   .alias('version', 'v')
 
   .usage(`Usage: ${me} <command> [options]`)
-  .command('*', '', () => {}, invalidCommand)
-  .argv;
+  .command('*', '', () => {}, invalidCommand).argv;

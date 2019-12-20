@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 /** Given a file, returns its parent path or false. */
-const getParentDirectory = (file) => {
+export const getParentDirectory = (file) => {
   if (!file || file === '/') {
     return false;
   }
@@ -10,7 +10,7 @@ const getParentDirectory = (file) => {
 };
 
 // TODO: update this definition to match findNearestFileSync
-const findNearestFile = (name, file, cb) => {
+export const findNearestFile = (name, file, cb) => {
   const parentDir = getParentDirectory(file);
   if (!parentDir) {
     return cb(null, false);
@@ -26,7 +26,7 @@ const findNearestFile = (name, file, cb) => {
 };
 
 /** Finds the closest directory that includes the file with name. */
-const findNearestFileSync = (name, dir) => {
+export const findNearestFileSync = (name, dir) => {
   const newFile = path.join(dir, name);
   const exists = fs.existsSync(newFile);
   if (exists) {
@@ -38,17 +38,10 @@ const findNearestFileSync = (name, dir) => {
 };
 
 /** Returns an array of parent directories (including dir). */
-const parents = (dir) => {
+export const parents = (dir) => {
   let result = [];
   do {
     result.push(dir);
   } while ((dir = getParentDirectory(dir)));
   return result;
-};
-
-module.exports = {
-  findNearestFile,
-  findNearestFileSync,
-  getParentDirectory,
-  parents,
 };
