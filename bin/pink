@@ -1,27 +1,34 @@
 #!/usr/bin/env node
 
-const path = require('path');
-const yargs = require('yargs');
-const packageConfig = require('../package');
+import path from 'path';
+import yargs from 'yargs';
+import { fileURLToPath } from 'url';
 
+import packageJson from '../package.json';
+import * as main from '../src';
+
+const __filename = fileURLToPath(import.meta.url);
 const me = path.basename(__filename);
 
 const invalidCommand = (argv) => {
   const cmd = argv._[0];
+  if (!cmd) {
+    console.log(`Please specify a command. See '${me} --help'`);
+    return;
+  }
+
   console.log(`'${cmd}' is not a valid ${me} command. See '${me} --help'`);
 };
 
 yargs
-  .command(['new <name>', 'n'], 'Creates a new pinkprint', () => {}, argv =>
-    lib.create(findRoot(TEMPLATE_DIRS, false), argv.name)
+  .command(
+    ['new <name>', 'n'],
+    'Creates a new pinkprint',
+    () => {},
+    main.runNew
   )
 
-  .command(
-    ['list', 'l'],
-    'List all commands',
-    () => {},
-    (argv) => console.log('not implemented')
-  )
+  .command(['list', 'l'], 'List all commands', () => {}, main.runList)
 
   .command(
     ['generate <template> <name> [args..]', 'g'],
@@ -33,15 +40,21 @@ yargs
         default: false,
       });
     },
-    (argv) => console.log('not implemented')
+    main.runGenerate
   )
 
   .option('verbose', {
     describe: 'Print verbose output',
     default: false,
   })
+
   .help('help')
-  .version('version', packageConfig.version)
+  .alias('help', 'h')
+  .example('pink new reducer', 'Create a new pinkprint')
+  .example('pink list', 'Show all pinkprint commands')
+  .example('pink generate component Button', 'Generate files')
+
+  .version('version', packageJson.version)
   .alias('version', 'v')
 
   .usage(`Usage: ${me} <command> [options]`)

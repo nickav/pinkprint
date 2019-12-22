@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
+    "start": "node --experimental-modules --es-module-specifier-resolution=node bin/pink",
     "format": "yarn f $(git ls-files -c -m | grep '\\.\\(jsx\\?\\|json\\|scss\\)$' | tr '\n' ' ')",
     "f": "node_modules/.bin/prettier --config package.json --write",
     "g": "bin/pink g",
