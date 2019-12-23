@@ -4,7 +4,7 @@ exports.default = {
       description: 'Creates a new js file with a header',
       args: ['author', 'description', 'notes'],
       run: (ctx) => {
-        const file = require('./pinkprints/file.js');
+        const file = require('./pinkprints/file.js').default;
 
         return file({
           name: ctx.filename,
@@ -16,7 +16,7 @@ exports.default = {
     },
 
     style: (ctx) => {
-      const scss = require('./pinkprints/style.scss.js');
+      const scss = require('./pinkprints/style.scss.js').default;
 
       return scss({
         name: ctx.filename,

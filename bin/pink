@@ -10,7 +10,7 @@ const root = main.findProjectRoot() || process.cwd();
 const config = (main.loadConfig(root) || {}).default;
 const me = path.basename(__filename);
 
-const ctx = { root, config };
+const ctx = { me, root, config };
 
 const invalidCommand = (argv) => {
   const cmd = argv._[0];
@@ -68,11 +68,16 @@ const commands = config.commands || [];
 Object.keys(commands).forEach((key) => {
   const command = commands[key];
 
-  cli.command([key], command.description || '', (yargs) => {
-    (command.args || []).forEach((arg) =>
-      yargs.option(arg, typeof arg === 'string' ? { describe: ' ' } : arg)
-    );
-  });
+  cli.command(
+    [key],
+    command.description || '',
+    (yargs) => {
+      (command.args || []).forEach((arg) =>
+        yargs.option(arg, typeof arg === 'string' ? { describe: ' ' } : arg)
+      );
+    },
+    (argv) => main.generate(ctx, argv, key, command)
+  );
 });
 
 cli

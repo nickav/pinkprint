@@ -75,6 +75,33 @@ const runList = (exports.runList = (ctx, argv) => {
   );
 });
 
+const generate = (exports.generate = (ctx, argv, name, cmd) => {
+  const run = typeof cmd === 'function' ? cmd : cmd.run;
+  assert(typeof run === 'function', 'Command must be a function!');
+
+  let result = null;
+  try {
+    result = run(ctx);
+  } catch (e) {
+    console.log(chalk.red(`Command ${name} threw an error:`));
+    console.log(e);
+  }
+
+  console.log(result);
+});
+
 const runGenerate = (exports.runGenerate = (ctx, argv) => {
-  console.log('not implemented');
+  assertNoConfigErrors(ctx.root, loadConfig(ctx.root));
+
+  const { template, name } = argv;
+  const commands = ctx.config.commands || {};
+  const command = commands[template];
+
+  assert(
+    command,
+    chalk.red(`Unknown command: '${template}'`) +
+      `\n  Available commands: ${Object.keys(commands).join(', ')}`
+  );
+
+  generate(ctx, argv, template, command);
 });
