@@ -10,8 +10,6 @@ const root = main.findProjectRoot() || process.cwd();
 const config = (main.loadConfig(root) || {}).default;
 const me = path.basename(__filename);
 
-const commands = config.commands || [];
-
 const ctx = { root, config };
 
 const invalidCommand = (argv) => {
@@ -32,7 +30,12 @@ const cli = yargs
     (argv) => main.runNew(ctx, argv)
   )
 
-  .command(['list', 'l'], 'List all commands', () => {}, main.runList)
+  .command(
+    ['list', 'l'],
+    'List all commands',
+    () => {},
+    (argv) => main.runList(ctx, argv)
+  )
 
   .command(
     ['generate <template> <name> [args..]', 'g'],
@@ -61,11 +64,12 @@ const cli = yargs
   .version('version', packageJson.version)
   .alias('version', 'v');
 
+const commands = config.commands || [];
 Object.keys(commands).forEach((key) => {
   const command = commands[key];
 
   cli.command([key], command.description || '', (yargs) => {
-    command.args.forEach((arg) =>
+    (command.args || []).forEach((arg) =>
       yargs.option(arg, typeof arg === 'string' ? { describe: ' ' } : arg)
     );
   });

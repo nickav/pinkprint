@@ -18,14 +18,14 @@ const loadConfig = (exports.loadConfig = (root) => {
     return null;
   }
 
-  let userConfig = null;
+  let config = null;
   try {
-    userConfig = require(configFile);
+    config = require(configFile);
   } catch (err) {
     return {};
   }
 
-  return userConfig;
+  return config;
 });
 
 const assertNoConfigErrors = (root, config) => {
@@ -38,14 +38,14 @@ const assertNoConfigErrors = (root, config) => {
   );
 
   assert(
-    userConfig.default,
+    config.default,
     chalk.red(`Invalid config file!`) +
       '\n  Config file must have a default export!'
   );
 };
 
-const runNew = (exports.runNew = (argv) => {
-  const dir = getPinkprintsDir(root);
+const runNew = (exports.runNew = (ctx, argv) => {
+  const dir = getPinkprintsDir(ctx.root);
 
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
@@ -60,19 +60,21 @@ const runNew = (exports.runNew = (argv) => {
   console.log(chalk.green(`${relativeName} created successfully!`));
 });
 
-const runList = (exports.runList = (argv) => {
-  const commands = userConfig.commands || {};
+const runList = (exports.runList = (ctx, argv) => {
+  assertNoConfigErrors(ctx.root, loadConfig(ctx.root));
+
+  const commands = ctx.config.commands || {};
 
   assert(Object.keys(commands).length, 'No commands found');
 
   console.log(chalk.magenta('Commands:'));
   console.log(
     Object.keys(commands)
-      .map((e) => `  ${e}`)
+      .map((e) => `  ${chalk.magenta(e)}`)
       .join('\n')
   );
 });
 
-const runGenerate = (exports.runGenerate = (argv) => {
+const runGenerate = (exports.runGenerate = (ctx, argv) => {
   console.log('not implemented');
 });
