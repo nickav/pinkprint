@@ -1,15 +1,15 @@
-import { execSync } from 'child_process';
+const { execSync } = require('child_process');
 
-import { findNearestFileSync } from './file-utils';
+const { findNearestFileSync } = require('./file-utils');
 
 /** Simple assert funciton. */
-export const assert = (cond, error) => {
+const assert = (exports.assert = (cond, error) => {
   if (cond) return;
   console.error(error);
   process.exit(1);
-};
+});
 
-export const findRoot = (filenames, error = true) => {
+const findRoot = (exports.findRoot = (filenames, error = true) => {
   let cwd = process.cwd();
   let root;
 
@@ -26,10 +26,10 @@ export const findRoot = (filenames, error = true) => {
   }
 
   return root;
-};
+});
 
 /** Get git user name and email. */
-export const getGitUser = () => {
+const getGitUser = (exports.getGitUser = () => {
   let name;
   let email;
 
@@ -41,16 +41,16 @@ export const getGitUser = () => {
   name = name && JSON.stringify(name.toString().trim()).slice(1, -1);
   email = email && email.toString().trim();
   return { name: name || '', email: email || '' };
-};
+});
 
-export const getGitRoot = () => {
+const getGitRoot = (exports.getGitRoot = () => {
   try {
     return execSync('git rev-parse --show-toplevel')
       .toString()
       .trim();
   } catch (e) {}
-};
+});
 
-export const findProjectRoot = () => {
+const findProjectRoot = (exports.findProjectRoot = () => {
   getGitRoot() || findRoot(['package.json']);
-};
+});

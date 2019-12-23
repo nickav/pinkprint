@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 
-import path from 'path';
-import yargs from 'yargs';
-import { fileURLToPath } from 'url';
+const path  = require('path');
+const yargs = require( 'yargs');
 
-import packageJson from '../package.json';
-import * as main from '../src';
+const packageJson =  require('../package.json');
+const main = require('../src');
 
-const __filename = fileURLToPath(import.meta.url);
 const me = path.basename(__filename);
 
 const invalidCommand = (argv) => {

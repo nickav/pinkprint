@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node --experimental-modules --es-module-specifier-resolution=node bin/pink",
+    "start": "node bin/pink",
     "format": "yarn f $(git ls-files -c -m | grep '\\.\\(jsx\\?\\|json\\|scss\\)$' | tr '\n' ' ')",
     "f": "node_modules/.bin/prettier --config package.json --write",
     "g": "bin/pink g",
@@ -23,9 +23,7 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "async": "^2.3.0",
     "chalk": "^1.1.3",
-    "colors": "^1.1.2",
     "helper-date": "^0.2.3",
     "humps": "^2.0.0",
     "pluralize": "^8.0.0",
