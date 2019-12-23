@@ -1,16 +1,50 @@
 const path = require('path');
 const fs = require('fs');
 
+const chalk = require('chalk');
+
 const { assert, findProjectRoot } = require('./helpers');
 
-const findProjectRootOrCwd = () => findProjectRoot() || process.cwd();
+exports.findProjectRoot = findProjectRoot;
 
 const getPinkprintsDir = (root) => path.resolve(root, 'pinkprints');
 
 const getPinkprintsConfig = (root) => path.resolve(root, 'pinkprint.config.js');
 
+const loadConfig = (exports.loadConfig = (root) => {
+  const configFile = getPinkprintsConfig(root);
+
+  if (!fs.existsSync(configFile)) {
+    return null;
+  }
+
+  let userConfig = null;
+  try {
+    userConfig = require(configFile);
+  } catch (err) {
+    return {};
+  }
+
+  return userConfig;
+});
+
+const assertNoConfigErrors = (root, config) => {
+  const configFile = getPinkprintsConfig(root);
+
+  assert(
+    config,
+    chalk.red(`Missing pinkprint.config.js file!`) +
+      `\n  Expected ${configFile}`
+  );
+
+  assert(
+    userConfig.default,
+    chalk.red(`Invalid config file!`) +
+      '\n  Config file must have a default export!'
+  );
+};
+
 const runNew = (exports.runNew = (argv) => {
-  const root = findProjectRootOrCwd();
   const dir = getPinkprintsDir(root);
 
   if (!fs.existsSync(dir)) {
@@ -23,32 +57,20 @@ const runNew = (exports.runNew = (argv) => {
 
   fs.writeFileSync(newFile, contents);
   const relativeName = path.relative(process.cwd(), newFile);
-  console.log(`${relativeName} created successfully!`);
+  console.log(chalk.green(`${relativeName} created successfully!`));
 });
 
 const runList = (exports.runList = (argv) => {
-  const root = findProjectRootOrCwd();
-  const config = getPinkprintsConfig(root);
+  const commands = userConfig.commands || {};
 
-  assert(
-    fs.existsSync(config),
-    `Missing pinkprint.config.js file!\n  Expected ${config}`
+  assert(Object.keys(commands).length, 'No commands found');
+
+  console.log(chalk.magenta('Commands:'));
+  console.log(
+    Object.keys(commands)
+      .map((e) => `  ${e}`)
+      .join('\n')
   );
-
-  let userConfig = null;
-  try {
-    userConfig = require(config);
-  } catch (err) {
-    console.log(`Failed to parse config file!`);
-  }
-
-  assert(userConfig.default, 'Config file must have a default export!');
-  userConfig = userConfig.default;
-
-  const commands = userConfig.commands || [];
-
-  console.log('Commands:');
-  console.log(commands);
 });
 
 const runGenerate = (exports.runGenerate = (argv) => {

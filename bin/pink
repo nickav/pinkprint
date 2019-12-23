@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 
-const path  = require('path');
-const yargs = require( 'yargs');
+const path = require('path');
+const yargs = require('yargs');
 
-const packageJson =  require('../package.json');
+const packageJson = require('../package.json');
 const main = require('../src');
 
+const root = main.findProjectRoot() || process.cwd();
+const config = (main.loadConfig(root) || {}).default;
 const me = path.basename(__filename);
+
+const commands = config.commands || [];
+
+const ctx = { root, config };
 
 const invalidCommand = (argv) => {
   const cmd = argv._[0];
@@ -18,12 +24,12 @@ const invalidCommand = (argv) => {
   console.log(`'${cmd}' is not a valid ${me} command. See '${me} --help'`);
 };
 
-yargs
+const cli = yargs
   .command(
     ['new <name>', 'n'],
     'Creates a new pinkprint',
     () => {},
-    main.runNew
+    (argv) => main.runNew(ctx, argv)
   )
 
   .command(['list', 'l'], 'List all commands', () => {}, main.runList)
@@ -38,7 +44,7 @@ yargs
         default: false,
       });
     },
-    main.runGenerate
+    (argv) => main.runGenerate(ctx, argv)
   )
 
   .option('verbose', {
@@ -53,7 +59,18 @@ yargs
   .example('pink generate component Button', 'Generate files')
 
   .version('version', packageJson.version)
-  .alias('version', 'v')
+  .alias('version', 'v');
 
+Object.keys(commands).forEach((key) => {
+  const command = commands[key];
+
+  cli.command([key], command.description || '', (yargs) => {
+    command.args.forEach((arg) =>
+      yargs.option(arg, typeof arg === 'string' ? { describe: ' ' } : arg)
+    );
+  });
+});
+
+cli
   .usage(`Usage: ${me} <command> [options]`)
   .command('*', '', () => {}, invalidCommand).argv;
