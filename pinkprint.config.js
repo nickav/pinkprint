@@ -33,9 +33,9 @@ exports.default = {
       args: ['author', 'description', 'notes'],
 
       run: (ctx, argv) => {
-        const header = require('./pinkprints/header').default;
+        const { fs } = ctx;
+        const header = ctx.getTemplate('header');
 
-        ctx.fs.defaultExtension = 'js';
         ctx.fs.basePath = path.join(ctx.fs.basePath, 'helpers');
         const filepath = ctx.fs.getFilePath(ctx.name);
         console.log(ctx);
@@ -51,7 +51,7 @@ exports.default = {
           notes: argv.notes || '',
         }).trimStart();
 
-        ctx.fs.writeFile(ctx.name, contents);
+        fs.writeFile(fs.withExtension(ctx.name, 'js'), contents);
       },
     },
 

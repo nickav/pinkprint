@@ -5,7 +5,8 @@ const { findNearestFileSync } = require('./file-utils');
 /** Simple assert funciton. */
 const assert = (exports.assert = (cond, error) => {
   if (cond) return;
-  console.error(error);
+  const message = typeof error === 'function' ? error(cond) : error;
+  console.error(message);
   process.exit(1);
 });
 

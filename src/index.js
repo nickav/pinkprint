@@ -7,12 +7,6 @@ const chalk = require('chalk');
 const { assert, findProjectRoot, getGitUser } = require('./helpers');
 const templateHelpers = require('./template-helpers');
 
-const getPinkprintsDir = (projectRoot) =>
-  path.resolve(projectRoot, 'pinkprints');
-
-const getPinkprintsConfig = (projectRoot) =>
-  path.resolve(projectRoot, 'pinkprint.config.js');
-
 const catchAll = (fn, defaultResult) => {
   let result = defaultResult;
   try {
@@ -22,7 +16,7 @@ const catchAll = (fn, defaultResult) => {
 };
 
 const requireSafe = (file, defaultValue = {}) => {
-  if (!fs.existsSync(file)) {
+  if (!fs.existsSync(file) && !fs.existsSync(file + '.js')) {
     return null;
   }
 
@@ -33,13 +27,24 @@ const requireSafe = (file, defaultValue = {}) => {
   }
 };
 
+const startWith = (str, prefix) =>
+  str.startsWith(prefix) ? str : prefix + str;
+
+const getPinkprintsDir = (projectRoot) =>
+  path.resolve(projectRoot, 'pinkprints');
+
+const getPinkprintsConfig = (projectRoot) =>
+  path.resolve(projectRoot, 'pinkprint.config.js');
+
 const createContext = (exports.createContext = () => {
   const projectRoot = findProjectRoot() || process.cwd();
+  const templateDir = getPinkprintsDir(projectRoot);
   const configFile = getPinkprintsConfig(projectRoot);
   const config = (requireSafe(configFile) || {}).default || {};
 
   return {
     projectRoot,
+    templateDir,
     configFile,
     config,
   };
@@ -51,16 +56,15 @@ const createFs = (ctx, argv, basePath) => {
 
     defaultExtension: '',
 
+    withExtension: (name, ext) =>
+      path.basename(name).includes('.') ? name : name + startWith(ext, '.'),
+
     getFilePath: (dest) => {
       const filePath = path.join(self.basePath, dest);
-
-      const ext = self.defaultExtension.startsWith('.')
-        ? self.defaultExtension
-        : '.' + self.defaultExtension;
-      return path.basename(filePath).includes('.') ? filePath : filePath + ext;
+      return self.defaultExtension
+        ? self.withExtension(filePath, self.defaultExtension)
+        : '';
     },
-
-    mkdirp: (dir) => util.promisify(fs.mkdir)(dir, { recursive: true }),
 
     writeFile: (dest, contents) => {
       const file = self.getFilePath(dest);
@@ -77,6 +81,8 @@ const createFs = (ctx, argv, basePath) => {
       });
     },
 
+    mkdirp: (dir) => util.promisify(fs.mkdir)(dir, { recursive: true }),
+
     readFileSync: (filePath) => catchAll(fs.readFileSync(filePath, 'utf8'), ''),
 
     readDirSync: (dir, options) => catchAll(fs.readdirSync(dir, options), []),
@@ -88,21 +94,21 @@ const createFs = (ctx, argv, basePath) => {
 const assertNoConfigErrors = (configFile, config) => {
   assert(
     config,
-    chalk.red(`Missing pinkprint.config.js file!`) +
+    () =>
+      chalk.red(`Missing pinkprint.config.js file!`) +
       `\n  Expected ${configFile}`
   );
 
   assert(
     config.default,
-    chalk.red(`Invalid config file!`) +
+    () =>
+      chalk.red(`Invalid config file!`) +
       '\n  Config file must have a default export!'
   );
 };
 
 const runInit = (exports.runInit = (ctx, argv) => {
-  const configFile = getPinkprintsConfig(ctx.projectRoot);
-
-  assert(!fs.existsSync(configFile), 'Config file already exists.');
+  assert(!fs.existsSync(ctx.configFile), 'Config file already exists.');
 
   const contents = `
 exports.default = {
@@ -115,7 +121,7 @@ exports.default = {
 });
 
 const runNew = (exports.runNew = (ctx, argv) => {
-  const dir = getPinkprintsDir(ctx.projectRoot);
+  const dir = ctx.templateDir;
 
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
@@ -167,6 +173,22 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
     getGitUser,
     getPackageJson: () =>
       requireSafe(path.resolve(ctx.projectRoot, 'package.json'), {}),
+    getTemplate: (name) => {
+      const templatePath = name.includes('pinkprints/')
+        ? path.resolve(ctx.projectRoot, name)
+        : path.resolve(ctx.templateDir, name);
+
+      const template = requireSafe(templatePath, null);
+
+      assert(
+        template,
+        () =>
+          chalk.red(`Missing template file: ${name}`) +
+          `\n  Searched ${templatePath}`
+      );
+
+      return template.default;
+    },
     helpers: templateHelpers,
     fs: createFs(ctx, argv, outputDir || configDir || ctx.projectRoot),
   };
@@ -189,7 +211,8 @@ const runGenerate = (exports.runGenerate = (ctx, argv) => {
 
   assert(
     command,
-    chalk.red(`Unknown command: '${commandName}'`) +
+    () =>
+      chalk.red(`Unknown command: '${commandName}'`) +
       `\n  Available commands: ${Object.keys(commands).join(', ')}`
   );
 
