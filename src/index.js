@@ -3,16 +3,18 @@ const fs = require('fs');
 
 const chalk = require('chalk');
 
-const { assert, findProjectRoot } = require('./helpers');
+const { assert, findProjectRoot, getGitUser } = require('./helpers');
 
 exports.findProjectRoot = findProjectRoot;
 
-const getPinkprintsDir = (root) => path.resolve(root, 'pinkprints');
+const getPinkprintsDir = (projectRoot) =>
+  path.resolve(projectRoot, 'pinkprints');
 
-const getPinkprintsConfig = (root) => path.resolve(root, 'pinkprint.config.js');
+const getPinkprintsConfig = (projectRoot) =>
+  path.resolve(projectRoot, 'pinkprint.config.js');
 
-const loadConfig = (exports.loadConfig = (root) => {
-  const configFile = getPinkprintsConfig(root);
+const loadConfig = (exports.loadConfig = (projectRoot) => {
+  const configFile = getPinkprintsConfig(projectRoot);
 
   if (!fs.existsSync(configFile)) {
     return null;
@@ -28,8 +30,18 @@ const loadConfig = (exports.loadConfig = (root) => {
   return config;
 });
 
-const assertNoConfigErrors = (root, config) => {
-  const configFile = getPinkprintsConfig(root);
+const createContext = (exports.createContext = () => {
+  const projectRoot = findProjectRoot() || process.cwd();
+  const config = (loadConfig(projectRoot) || {}).default;
+
+  return {
+    projectRoot,
+    config,
+  };
+});
+
+const assertNoConfigErrors = (projectRoot, config) => {
+  const configFile = getPinkprintsConfig(projectRoot);
 
   assert(
     config,
@@ -44,8 +56,23 @@ const assertNoConfigErrors = (root, config) => {
   );
 };
 
+const runInit = (exports.runInit = (ctx, argv) => {
+  const configFile = getPinkprintsConfig(ctx.projectRoot);
+
+  assert(!fs.existsSync(configFile), 'Config file already exists.');
+
+  const contents = `
+exports.default = {
+  commands: {
+  }
+}`;
+
+  fs.writeFileSync(configFile, contents.trim());
+  console.log(chalk.green(`pinkprint.config.js created successfully!`));
+});
+
 const runNew = (exports.runNew = (ctx, argv) => {
-  const dir = getPinkprintsDir(ctx.root);
+  const dir = getPinkprintsDir(ctx.projectRoot);
 
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
@@ -61,7 +88,7 @@ const runNew = (exports.runNew = (ctx, argv) => {
 });
 
 const runList = (exports.runList = (ctx, argv) => {
-  assertNoConfigErrors(ctx.root, loadConfig(ctx.root));
+  assertNoConfigErrors(ctx.projectRoot, loadConfig(ctx.projectRoot));
 
   const commands = ctx.config.commands || {};
 
@@ -79,9 +106,11 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
   const run = typeof cmd === 'function' ? cmd : cmd.run;
   assert(typeof run === 'function', 'Command must be a function!');
 
+  const context = { ...ctx, name, author: getGitUser() };
+
   let result = null;
   try {
-    result = run(ctx);
+    result = run(context, argv);
   } catch (e) {
     console.log(chalk.red(`Command ${name} threw an error:`));
     console.log(e);
@@ -91,7 +120,7 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
 });
 
 const runGenerate = (exports.runGenerate = (ctx, argv) => {
-  assertNoConfigErrors(ctx.root, loadConfig(ctx.root));
+  assertNoConfigErrors(ctx.projectRoot, loadConfig(ctx.projectRoot));
 
   const { template, name } = argv;
   const commands = ctx.config.commands || {};

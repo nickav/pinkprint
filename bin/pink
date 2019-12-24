@@ -6,11 +6,8 @@ const yargs = require('yargs');
 const packageJson = require('../package.json');
 const main = require('../src');
 
-const root = main.findProjectRoot() || process.cwd();
-const config = (main.loadConfig(root) || {}).default;
 const me = path.basename(__filename);
-
-const ctx = { me, root, config };
+const ctx = main.createContext();
 
 const invalidCommand = (argv) => {
   const cmd = argv._[0];
@@ -23,6 +20,13 @@ const invalidCommand = (argv) => {
 };
 
 const cli = yargs
+  .command(
+    ['init', 'i'],
+    'Creates the default config file',
+    () => {},
+    (argv) => main.runInit(ctx, argv)
+  )
+
   .command(
     ['new <name>', 'n'],
     'Creates a new pinkprint',
@@ -64,7 +68,7 @@ const cli = yargs
   .version('version', packageJson.version)
   .alias('version', 'v');
 
-const commands = config.commands || [];
+const commands = ctx.config.commands || [];
 Object.keys(commands).forEach((key) => {
   const command = commands[key];
 
