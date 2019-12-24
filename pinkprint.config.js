@@ -40,9 +40,13 @@ exports.default = {
         const filepath = ctx.fs.getFilePath(ctx.name);
         console.log(ctx);
 
+        const user = ctx.getGitUser();
+        const packageJson = ctx.getPackageJson();
+        const author = argv.author || packageJson.author || user.name || '';
+
         const contents = header(ctx.helpers, {
           name: ctx.name,
-          author: argv.author || '',
+          author,
           description: argv.description || '',
           notes: argv.notes || '',
         }).trimStart();

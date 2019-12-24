@@ -7,8 +7,6 @@ const chalk = require('chalk');
 const { assert, findProjectRoot, getGitUser } = require('./helpers');
 const templateHelpers = require('./template-helpers');
 
-exports.findProjectRoot = findProjectRoot;
-
 const getPinkprintsDir = (projectRoot) =>
   path.resolve(projectRoot, 'pinkprints');
 
@@ -34,6 +32,18 @@ const requireSafe = (file, defaultValue = {}) => {
     return defaultValue;
   }
 };
+
+const createContext = (exports.createContext = () => {
+  const projectRoot = findProjectRoot() || process.cwd();
+  const configFile = getPinkprintsConfig(projectRoot);
+  const config = (requireSafe(configFile) || {}).default || {};
+
+  return {
+    projectRoot,
+    configFile,
+    config,
+  };
+});
 
 const createFs = (ctx, argv, basePath) => {
   const self = {
@@ -74,18 +84,6 @@ const createFs = (ctx, argv, basePath) => {
 
   return self;
 };
-
-const createContext = (exports.createContext = () => {
-  const projectRoot = findProjectRoot() || process.cwd();
-  const configFile = getPinkprintsConfig(projectRoot);
-  const config = (requireSafe(configFile) || {}).default || {};
-
-  return {
-    projectRoot,
-    configFile,
-    config,
-  };
-});
 
 const assertNoConfigErrors = (configFile, config) => {
   assert(
@@ -164,7 +162,11 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
   const context = {
     ...ctx,
     name,
-    author: getGitUser(),
+    getAuthor: () =>
+      argv.author || context.getPackageJson().author || getGitUser().name || '',
+    getGitUser,
+    getPackageJson: () =>
+      requireSafe(path.resolve(ctx.projectRoot, 'package.json'), {}),
     helpers: templateHelpers,
     fs: createFs(ctx, argv, outputDir || configDir || ctx.projectRoot),
   };
