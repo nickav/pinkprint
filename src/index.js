@@ -5,6 +5,7 @@ const util = require('util');
 const chalk = require('chalk');
 
 const { assert, findProjectRoot, getGitUser } = require('./helpers');
+const templateHelpers = require('./template-helpers');
 
 exports.findProjectRoot = findProjectRoot;
 
@@ -14,44 +15,61 @@ const getPinkprintsDir = (projectRoot) =>
 const getPinkprintsConfig = (projectRoot) =>
   path.resolve(projectRoot, 'pinkprint.config.js');
 
-const loadConfig = (exports.loadConfig = (projectRoot) => {
-  const configFile = getPinkprintsConfig(projectRoot);
+const catchAll = (fn, defaultResult) => {
+  let result = defaultResult;
+  try {
+    result = fn();
+  } catch (e) {}
+  return result;
+};
 
-  if (!fs.existsSync(configFile)) {
+const requireSafe = (file, defaultValue = {}) => {
+  if (!fs.existsSync(file)) {
     return null;
   }
 
-  let config = null;
   try {
-    config = require(configFile);
+    return require(file);
   } catch (err) {
-    return {};
+    return defaultValue;
   }
+};
 
-  return config;
-});
-
-const createFs = (basePath) => {
+const createFs = (ctx, argv, basePath) => {
   const self = {
     basePath,
 
     defaultExtension: '',
 
-    writeFile: (dest, contents) => {
-      return util
-        .promisify(fs.mkdir)(path.dirname(dest), { recursive: true })
-        .then(() => {
-          const filePath = path.join(self.basePath, dest);
-          const ext = self.defaultExtension.startsWith('.')
-            ? self.defaultExtension
-            : '.' + self.defaultExtension;
-          const file = path.basename(filePath).includes('.')
-            ? filePath
-            : filePath + ext;
+    getFilePath: (dest) => {
+      const filePath = path.join(self.basePath, dest);
 
-          return util.promisify(fs.writeFile)(file, contents);
-        });
+      const ext = self.defaultExtension.startsWith('.')
+        ? self.defaultExtension
+        : '.' + self.defaultExtension;
+      return path.basename(filePath).includes('.') ? filePath : filePath + ext;
     },
+
+    mkdirp: (dir) => util.promisify(fs.mkdir)(dir, { recursive: true }),
+
+    writeFile: (dest, contents) => {
+      const file = self.getFilePath(dest);
+      const relFile = path.relative(ctx.projectRoot, file);
+
+      return self.mkdirp(path.dirname(file)).then(() => {
+        return Promise.resolve(
+          argv.preview
+            ? console.log(contents)
+            : util.promisify(fs.writeFile)(file, contents)
+        ).then(() => {
+          console.log(chalk.cyan(`Wrote file ${relFile}`));
+        });
+      });
+    },
+
+    readFileSync: (filePath) => catchAll(fs.readFileSync(filePath, 'utf8'), ''),
+
+    readDirSync: (dir, options) => catchAll(fs.readdirSync(dir, options), []),
   };
 
   return self;
@@ -59,17 +77,17 @@ const createFs = (basePath) => {
 
 const createContext = (exports.createContext = () => {
   const projectRoot = findProjectRoot() || process.cwd();
-  const config = (loadConfig(projectRoot) || {}).default;
+  const configFile = getPinkprintsConfig(projectRoot);
+  const config = (requireSafe(configFile) || {}).default || {};
 
   return {
     projectRoot,
+    configFile,
     config,
   };
 });
 
-const assertNoConfigErrors = (projectRoot, config) => {
-  const configFile = getPinkprintsConfig(projectRoot);
-
+const assertNoConfigErrors = (configFile, config) => {
   assert(
     config,
     chalk.red(`Missing pinkprint.config.js file!`) +
@@ -115,7 +133,7 @@ const runNew = (exports.runNew = (ctx, argv) => {
 });
 
 const runList = (exports.runList = (ctx, argv) => {
-  assertNoConfigErrors(ctx.projectRoot, loadConfig(ctx.projectRoot));
+  assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
 
   const commands = ctx.config.commands || {};
 
@@ -130,7 +148,7 @@ const runList = (exports.runList = (ctx, argv) => {
 });
 
 const generate = (exports.generate = (ctx, argv, name, cmd) => {
-  assertNoConfigErrors(ctx.projectRoot, loadConfig(ctx.projectRoot));
+  assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
 
   const run = typeof cmd === 'function' ? cmd : cmd.run;
   assert(typeof run === 'function', 'Command must be a function!');
@@ -147,7 +165,8 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
     ...ctx,
     name,
     author: getGitUser(),
-    fs: createFs(outputDir || configDir || ctx.projectRoot),
+    helpers: templateHelpers,
+    fs: createFs(ctx, argv, outputDir || configDir || ctx.projectRoot),
   };
 
   let result = null;
@@ -157,12 +176,10 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
     console.log(chalk.red(`Command ${name} threw an error:`));
     console.log(e);
   }
-
-  console.log(result);
 });
 
 const runGenerate = (exports.runGenerate = (ctx, argv) => {
-  assertNoConfigErrors(ctx.projectRoot, loadConfig(ctx.projectRoot));
+  assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
 
   const { command: commandName, name } = argv;
   const commands = ctx.config.commands || {};

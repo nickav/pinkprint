@@ -1,13 +1,13 @@
-exports.default = ({ name, author, description, notes }) =>
+exports.default = (h, { name, author, description, notes }) =>
   `
 /******************************************************************************\\
-* File: ${name}
+* File:${h.prefix(name, ' ')}
 *
-* Author: ${author}
+* Author ${author}
 *
-* Description: ${description}
+* Description:${h.prefix(description, ' ')}
 *
-* Notes: ${notes}
+* Notes:${h.prefix(notes, ' ')}
 \\******************************************************************************/
 
 
