@@ -19,6 +19,19 @@ const invalidCommand = (argv) => {
   console.log(`'${cmd}' is not a valid ${me} command. See '${me} --help'`);
 };
 
+const commandOptions = (yargs) => {
+  yargs.option('preview', {
+    describe: 'Preview without modifying any files',
+    alias: 'p',
+    default: false,
+  });
+
+  yargs.option('output-dir', {
+    describe: 'Change the default output directory',
+    alias: 'o',
+  });
+};
+
 const cli = yargs
   .command(
     ['init', 'i'],
@@ -42,15 +55,9 @@ const cli = yargs
   )
 
   .command(
-    ['generate <template> <name> [args..]', 'g'],
-    'Creates files from a pinkprint template',
-    (yargs) => {
-      yargs.option('preview', {
-        describe: 'Preview without modifying any files',
-        alias: 'p',
-        default: false,
-      });
-    },
+    ['generate <command> <name> [args..]', 'g'],
+    'Creates files from a pinkprint command',
+    commandOptions,
     (argv) => main.runGenerate(ctx, argv)
   )
 
@@ -68,19 +75,21 @@ const cli = yargs
   .version('version', packageJson.version)
   .alias('version', 'v');
 
-const commands = ctx.config.commands || [];
+const commands = (ctx.config || {}).commands || [];
 Object.keys(commands).forEach((key) => {
   const command = commands[key];
 
   cli.command(
-    [key],
+    [key + ' <name> [args..]'],
     command.description || '',
     (yargs) => {
+      commandOptions(yargs);
+
       (command.args || []).forEach((arg) =>
         yargs.option(arg, typeof arg === 'string' ? { describe: ' ' } : arg)
       );
     },
-    (argv) => main.generate(ctx, argv, key, command)
+    (argv) => main.generate(ctx, argv, argv.name, command)
   );
 });
 

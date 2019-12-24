@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const util = require('util');
 
 const chalk = require('chalk');
 
@@ -29,6 +30,32 @@ const loadConfig = (exports.loadConfig = (projectRoot) => {
 
   return config;
 });
+
+const createFs = (basePath) => {
+  const self = {
+    basePath,
+
+    defaultExtension: '',
+
+    writeFile: (dest, contents) => {
+      return util
+        .promisify(fs.mkdir)(path.dirname(dest), { recursive: true })
+        .then(() => {
+          const filePath = path.join(self.basePath, dest);
+          const ext = self.defaultExtension.startsWith('.')
+            ? self.defaultExtension
+            : '.' + self.defaultExtension;
+          const file = path.basename(filePath).includes('.')
+            ? filePath
+            : filePath + ext;
+
+          return util.promisify(fs.writeFile)(file, contents);
+        });
+    },
+  };
+
+  return self;
+};
 
 const createContext = (exports.createContext = () => {
   const projectRoot = findProjectRoot() || process.cwd();
@@ -103,10 +130,25 @@ const runList = (exports.runList = (ctx, argv) => {
 });
 
 const generate = (exports.generate = (ctx, argv, name, cmd) => {
+  assertNoConfigErrors(ctx.projectRoot, loadConfig(ctx.projectRoot));
+
   const run = typeof cmd === 'function' ? cmd : cmd.run;
   assert(typeof run === 'function', 'Command must be a function!');
 
-  const context = { ...ctx, name, author: getGitUser() };
+  const outputDir = argv.outputDir
+    ? path.resolve(process.cwd(), argv.outputDir)
+    : '';
+  const configOutputPath = (ctx.config.output || {}).path || '';
+  const configDir = configOutputPath
+    ? path.resolve(ctx.projectRoot, configOutputPath)
+    : '';
+
+  const context = {
+    ...ctx,
+    name,
+    author: getGitUser(),
+    fs: createFs(outputDir || configDir || ctx.projectRoot),
+  };
 
   let result = null;
   try {
@@ -122,15 +164,15 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
 const runGenerate = (exports.runGenerate = (ctx, argv) => {
   assertNoConfigErrors(ctx.projectRoot, loadConfig(ctx.projectRoot));
 
-  const { template, name } = argv;
+  const { command: commandName, name } = argv;
   const commands = ctx.config.commands || {};
-  const command = commands[template];
+  const command = commands[commandName];
 
   assert(
     command,
-    chalk.red(`Unknown command: '${template}'`) +
+    chalk.red(`Unknown command: '${commandName}'`) +
       `\n  Available commands: ${Object.keys(commands).join(', ')}`
   );
 
-  generate(ctx, argv, template, command);
+  generate(ctx, argv, name, command);
 });
