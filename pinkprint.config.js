@@ -6,52 +6,25 @@ exports.default = {
   },
 
   commands: {
-    /*
-    file: {
-      description: 'Creates a new js file with a header',
-      args: ['author', 'description', 'notes'],
-      run: (ctx, argv) => {
-        const header = require('./pinkprints/header').default;
-
-        ctx.fs.defaultExtension = 'js';
-
-        ctx.fs.writeFile(
-          ctx.name,
-          header({
-            name: ctx.name || '',
-            author: argv.author || '',
-            description: argv.description || '',
-            notes: argv.notes || '',
-          }).trimStart()
-        );
-      },
-    },
-    */
-
     helper: {
       description: 'Creates a new helper file',
       args: ['author', 'description', 'notes'],
 
       run: (ctx, argv) => {
         const { fs } = ctx;
-        const header = ctx.getTemplate('header');
 
-        ctx.fs.basePath = path.join(ctx.fs.basePath, 'helpers');
-        const filepath = ctx.fs.getFilePath(ctx.name);
-        console.log(ctx);
+        const template = ctx.getTemplate('header');
+        const name = fs.withExtension(ctx.name, 'js');
 
-        const user = ctx.getGitUser();
-        const packageJson = ctx.getPackageJson();
-        const author = argv.author || packageJson.author || user.name || '';
-
-        const contents = header(ctx.helpers, {
-          name: ctx.name,
-          author,
+        const args = {
+          name,
+          author: argv.author || ctx.getAuthor(),
           description: argv.description || '',
           notes: argv.notes || '',
-        }).trimStart();
+        };
 
-        fs.writeFile(fs.withExtension(ctx.name, 'js'), contents);
+        const contents = template(ctx.helpers, args).trimStart();
+        fs.write(path.resolve('helpers', args.name), contents);
       },
     },
 

@@ -12,12 +12,11 @@ Install [yarn][yarn-install]. Then run:
 > yarn add pinkprint
 ```
 
-Now, run `pink init`. This will create an empty config file in your project root.
+Now run `pink init`. This will create an empty config file in your project root.
 
 ### Alias
 
-pinkprint will now be added to your project. It is also recommended to add the
-following to your `package.json`:
+It is also recommended to add the following to your `package.json`:
 
 ```javascript
 {
@@ -27,7 +26,9 @@ following to your `package.json`:
 }
 ```
 
-Now you can run `yarn g <template>`, an alias for generate.
+Now you can use `yarn g <command>` as an alias for `pink generate`.
+
+## Getting Started
 
 ### Create a new pinkprint
 
@@ -35,46 +36,85 @@ Now you can run `yarn g <template>`, an alias for generate.
 > pink new component
 ```
 
-This will create a template folder in your project root `pinkprints/component.js`.
+This will create a new template file in your project root `./pinkprints/component.js`.
 
-Pinkprint templates are written in vanilla JavaScript and have should have a
-export a function that when called returns a string.
+Pinkprint templates are written in vanilla JavaScript and by convention export a
+default function that when called returns a string.
 
 E.g.
 
 ```javascript
-export default (ctx) => `Hello ${ctx.name}!`;
+exports.default = ($, args) => `Hello ${args.name}!`;
 ```
 
-### Generate files from a pinkprint
+### Create a new command
 
-```bash
-> pink generate component foobar
-```
+Commands are the main interface to pinkprint. To create a new command, add one
+to your [config file](#config):
 
-This will create all files within the `generate` folder of the `component`
-template.
-
-In addition, you can also run `pink component foobar` as shorthand.
-
-### Context
-
-Every pinkprint command has access to the following context variables:
+E.g.
 
 ```javascript
-$; // alias for helpers
-author; // the git author { name, email }
-argv; // object of cli arguments
-name; // the name of the new pinkprint
-src; // the source pinkprint directory
-dest; // the destination
-path; // relative path from dest
+exports.default = {
+  commands: {
+    file: (ctx, argv) => {
+      const template = ctx.getTemplate('component');
+      const name = fs.withExtension(ctx.name, 'js');
+      const args = { name };
+      ctx.write(name, template(ctx.helpers, args));
+    },
+  },
+};
 ```
 
-### Helpers
+Commands can do anything but primarily are responsible for evaluating templates
+and calling `ctx.write` to output files.
 
-There are several built-in [helpers](./src/helpers.js).
-You can also register more in the before hook.
+### Run a command
+
+```bash
+> pink run component foobar
+```
+
+This will run the `component` command in your `pinkprint.config.js`.
+
+In addition, you can also run `pink component foobar` as a shorthand.
+
+## Config
+
+The pinkprint config file (`pinkprint.config.js`) lives in your project root.
+
+It supports the following options:
+
+```javascript
+exports.default = {
+  output: {
+    // path where files are written to
+    path: './src',
+  },
+
+  commands: {
+    file: (ctx, argv) => {},
+  },
+};
+```
+
+See an [example config file here](./pinkprint.config.js).
+
+## Context
+
+The pinkprint context contains the following:
+
+```javascript
+```
+
+## Helpers
+
+There are several built-in [template helpers](./src/template-helpers.js).
+
+You can access them via `ctx.helpers`.
+
 
 [prettier]: https://github.com/prettier/prettier
 [yarn-install]: https://yarnpkg.com/lang/en/docs/install/
+[yargs]: https://github.com/yargs/yargs

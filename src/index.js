@@ -56,30 +56,34 @@ const createFs = (ctx, argv, basePath) => {
 
     defaultExtension: '',
 
+    setDefaultExtension: (ext) => (self.defaultExtension = ext),
+
     withExtension: (name, ext) =>
       path.basename(name).includes('.') ? name : name + startWith(ext, '.'),
 
-    getFilePath: (dest) => {
-      const filePath = path.join(self.basePath, dest);
+    resolvePath: (dest) => {
+      const filePath = path.resolve(self.basePath, dest);
       return self.defaultExtension
         ? self.withExtension(filePath, self.defaultExtension)
-        : '';
+        : filePath;
     },
 
-    writeFile: (dest, contents) => {
-      const file = self.getFilePath(dest);
-      const relFile = path.relative(ctx.projectRoot, file);
+    write: (dest, contents) => {
+      const file = self.resolvePath(dest);
 
-      return self.mkdirp(path.dirname(file)).then(() => {
-        return Promise.resolve(
-          argv.preview
-            ? console.log(contents)
-            : util.promisify(fs.writeFile)(file, contents)
-        ).then(() => {
-          console.log(chalk.cyan(`Wrote file ${relFile}`));
-        });
+      return Promise.resolve(
+        argv.preview
+          ? console.log(contents)
+          : self
+              .mkdirp(path.dirname(file))
+              .then(() => self.writeFile(file, contents))
+      ).then(() => {
+        const relFile = path.relative(ctx.projectRoot, file);
+        console.log(chalk.cyan(`Wrote file ${relFile}`));
       });
     },
+
+    writeFile: (...args) => util.promisify(fs.writeFile)(...args),
 
     mkdirp: (dir) => util.promisify(fs.mkdir)(dir, { recursive: true }),
 
@@ -165,11 +169,12 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
     ? path.resolve(ctx.projectRoot, configOutputPath)
     : '';
 
+  const fsRoot = outputDir || configDir || ctx.projectRoot;
+
   const context = {
     ...ctx,
     name,
-    getAuthor: () =>
-      argv.author || context.getPackageJson().author || getGitUser().name || '',
+    getAuthor: () => context.getPackageJson().author || getGitUser().name || '',
     getGitUser,
     getPackageJson: () =>
       requireSafe(path.resolve(ctx.projectRoot, 'package.json'), {}),
@@ -189,8 +194,9 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
 
       return template.default;
     },
+    require: requireSafe,
     helpers: templateHelpers,
-    fs: createFs(ctx, argv, outputDir || configDir || ctx.projectRoot),
+    fs: createFs(ctx, argv, fsRoot),
   };
 
   let result = null;

@@ -57,7 +57,7 @@ const cli = yargs
   )
 
   .command(
-    ['generate <command> <name> [args..]', 'g'],
+    ['run <command> <name> [args..]', 'g'],
     'Creates files from a pinkprint command',
     commandOptions,
     (argv) => main.runGenerate(ctx, argv)
@@ -72,7 +72,7 @@ const cli = yargs
   .alias('help', 'h')
   .example('pink new reducer', 'Create a new pinkprint')
   .example('pink list', 'Show all pinkprint commands')
-  .example('pink generate component Button', 'Generate files')
+  .example('pink run component Button', 'Generate files')
 
   .version('version', packageJson.version)
   .alias('version', 'v');
