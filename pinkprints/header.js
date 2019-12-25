@@ -1,7 +1,7 @@
-exports.default = (h, { name, author, description, notes }) =>
+exports.default = (h, { fileName, author, description, notes }) =>
   `
 /******************************************************************************\\
-* File: ${name}
+* File: ${fileName}
 *
 * Author: ${author}
 *

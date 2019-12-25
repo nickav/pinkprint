@@ -10,28 +10,18 @@ exports.default = {
       description: 'Creates a new helper file',
       args: ['author', 'description', 'notes'],
 
-      run: (ctx, argv) => {
-        const { fs } = ctx;
-
-        const template = ctx.getTemplate('header');
-        const name = fs.withExtension(ctx.name, 'js');
-
-        const args = {
-          name,
-          author: argv.author || ctx.getAuthor(),
+      run: (ctx, argv) =>
+        ctx.doTemplate('header.js', 'helpers', {
           description: argv.description || '',
           notes: argv.notes || '',
-        };
-
-        console.log(ctx);
-
-        const contents = template(ctx.helpers, args).trimStart();
-        fs.write(path.resolve('helpers', args.name), contents);
-      },
+        }),
     },
 
-    style: (ctx, argv) => {
-      ctx.doTemplate('style.scss', 'style');
+    style: (ctx, argv) => ctx.doTemplate('style.scss', 'style'),
+
+    component: (ctx, argv) => {
+      const t = ctx.beginTemplate('Component.jsx', 'components');
+      ctx.commitTemplate(t);
     },
 
     /*

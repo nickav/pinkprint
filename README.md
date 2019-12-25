@@ -72,7 +72,7 @@ and calling `ctx.write` to output files.
 ### Run a command
 
 ```bash
-> pink run component foobar
+> pink generate component foobar
 ```
 
 This will run the `component` command in your `pinkprint.config.js`.

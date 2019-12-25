@@ -70,6 +70,7 @@ const createFs = (ctx, argv, basePath) => {
 
     write: (dest, contents) => {
       const file = self.resolvePath(dest);
+      const relFile = path.relative(ctx.projectRoot, file);
 
       return Promise.resolve(
         argv.preview
@@ -77,10 +78,18 @@ const createFs = (ctx, argv, basePath) => {
           : self
               .mkdirp(path.dirname(file))
               .then(() => self.writeFile(file, contents))
-      ).then(() => {
-        const relFile = path.relative(ctx.projectRoot, file);
-        console.log(chalk.cyan(`Wrote file ${relFile}`));
-      });
+      )
+        .then(() => {
+          console.log(
+            argv.preview
+              ? chalk.yellow(`Skipped writing ${relFile}`)
+              : chalk.cyan(`Wrote file ${relFile}`)
+          );
+        })
+        .catch((err) => {
+          console.error(chalk.red(`Failed to create ${relFile}`));
+          console.error(err);
+        });
     },
 
     writeFile: (...args) => util.promisify(fs.writeFile)(...args),
@@ -198,8 +207,11 @@ const createCommandContext = (ctx, argv, name) => {
     const parts = templateName.split('.').filter((e) => e !== 'js');
     const extension = parts.length > 1 ? parts[parts.length - 1] : 'js';
 
-    const relativeName = fs.withExtension(name.replace(/\./g, '/'), extension);
-    const fullPath = fs.resolvePath(path.resolve(basePath, relativeName));
+    const relativeName = fs.withExtension(
+      name.replace(/\./g, path.sep),
+      extension
+    );
+    const fullPath = fs.resolvePath(path.join(basePath, relativeName));
 
     return {
       fileName: path.basename(relativeName),
@@ -212,7 +224,10 @@ const createCommandContext = (ctx, argv, name) => {
   };
 
   const commitTemplate = (t, args = {}) => {
-    const contents = t.template(templateHelpers, { ...t, ...args }).trimStart();
+    const { template, ...rest } = t;
+    const contents = t
+      .template(templateHelpers, { ...rest, ...args })
+      .trimStart();
     return fs.write(t.fullPath, contents);
   };
 
