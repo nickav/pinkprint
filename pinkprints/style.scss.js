@@ -1,7 +1,7 @@
-exports.default = ({ name }) =>
+exports.default = ($, args) =>
   `
-// File: ${name}
+// File: ${args.fileName}
 
-.${name} {
+.${args.name} {
 }
 `;

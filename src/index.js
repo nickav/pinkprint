@@ -155,12 +155,7 @@ const runList = (exports.runList = (ctx, argv) => {
   );
 });
 
-const generate = (exports.generate = (ctx, argv, name, cmd) => {
-  assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
-
-  const run = typeof cmd === 'function' ? cmd : cmd.run;
-  assert(typeof run === 'function', 'Command must be a function!');
-
+const getFsRoot = (ctx, argv) => {
   const outputDir = argv.outputDir
     ? path.resolve(process.cwd(), argv.outputDir)
     : '';
@@ -169,35 +164,86 @@ const generate = (exports.generate = (ctx, argv, name, cmd) => {
     ? path.resolve(ctx.projectRoot, configOutputPath)
     : '';
 
-  const fsRoot = outputDir || configDir || ctx.projectRoot;
+  return outputDir || configDir || ctx.projectRoot;
+};
 
-  const context = {
+const createCommandContext = (ctx, argv, name) => {
+  const getPackageJson = () =>
+    requireSafe(path.resolve(ctx.projectRoot, 'package.json'), {});
+
+  const getAuthor = () => getPackageJson().author || getGitUser().name || '';
+
+  const getTemplate = (name) => {
+    const templatePath = name.includes('pinkprints/')
+      ? path.resolve(ctx.projectRoot, name)
+      : path.resolve(ctx.templateDir, name);
+
+    const template = requireSafe(templatePath, null);
+
+    assert(
+      template,
+      () =>
+        chalk.red(`Missing template file: ${name}`) +
+        `\n  Searched ${templatePath}`
+    );
+
+    return template.default;
+  };
+
+  const fs = createFs(ctx, argv, getFsRoot(ctx, argv));
+
+  const beginTemplate = (templateName, basePath) => {
+    const template = getTemplate(templateName);
+
+    const parts = templateName.split('.').filter((e) => e !== 'js');
+    const extension = parts.length > 1 ? parts[parts.length - 1] : 'js';
+
+    const relativeName = fs.withExtension(name.replace(/\./g, '/'), extension);
+    const fullPath = fs.resolvePath(path.resolve(basePath, relativeName));
+
+    return {
+      fileName: path.basename(relativeName),
+      name: path.basename(relativeName, path.extname(relativeName)),
+      relativeName: path.join(basePath, relativeName),
+      fullPath,
+      author: argv.author || getAuthor(),
+      template,
+    };
+  };
+
+  const commitTemplate = (t, args = {}) => {
+    const contents = t.template(templateHelpers, { ...t, ...args }).trimStart();
+    return fs.write(t.fullPath, contents);
+  };
+
+  const doTemplate = (templateName, basePath = '.', args = {}) => {
+    const t = beginTemplate(templateName, basePath);
+    return commitTemplate(t, args);
+  };
+
+  return {
     ...ctx,
     name,
-    getAuthor: () => context.getPackageJson().author || getGitUser().name || '',
+    getPackageJson,
+    getAuthor,
     getGitUser,
-    getPackageJson: () =>
-      requireSafe(path.resolve(ctx.projectRoot, 'package.json'), {}),
-    getTemplate: (name) => {
-      const templatePath = name.includes('pinkprints/')
-        ? path.resolve(ctx.projectRoot, name)
-        : path.resolve(ctx.templateDir, name);
-
-      const template = requireSafe(templatePath, null);
-
-      assert(
-        template,
-        () =>
-          chalk.red(`Missing template file: ${name}`) +
-          `\n  Searched ${templatePath}`
-      );
-
-      return template.default;
-    },
+    getTemplate,
+    beginTemplate,
+    commitTemplate,
+    doTemplate,
     require: requireSafe,
     helpers: templateHelpers,
-    fs: createFs(ctx, argv, fsRoot),
+    fs,
   };
+};
+
+const generate = (exports.generate = (ctx, argv, name, cmd) => {
+  assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
+
+  const run = typeof cmd === 'function' ? cmd : cmd.run;
+  assert(typeof run === 'function', 'Command must be a function!');
+
+  const context = createCommandContext(ctx, argv, name);
 
   let result = null;
   try {

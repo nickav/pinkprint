@@ -23,20 +23,18 @@ exports.default = {
           notes: argv.notes || '',
         };
 
+        console.log(ctx);
+
         const contents = template(ctx.helpers, args).trimStart();
         fs.write(path.resolve('helpers', args.name), contents);
       },
     },
 
-    /*
-    style: (ctx) => {
-      const scss = require('./pinkprints/style.scss').default;
-
-      return scss({
-        name: ctx.filename,
-      }).trim();
+    style: (ctx, argv) => {
+      ctx.doTemplate('style.scss', 'style');
     },
 
+    /*
     component: (ctx, argv) => {
       const Component = require('./pinkprints/Component.jsx').default;
 
