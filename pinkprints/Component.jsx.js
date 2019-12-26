@@ -1,6 +1,7 @@
-exports.default = (argv) => `
+exports.default = (h, argv) =>
+  `
 /******************************************************************************\\
- * File: ${argv.filename}
+ * File: ${argv.fileName}
  *
  * Author: ${argv.author}
  *
@@ -35,4 +36,4 @@ class ${argv.name} extends React.Component {
 //------------------------------------------------------------------------------
 // Export ----------------------------------------------------------------------
 export default ${argv.name};
-`;
+`.trim();

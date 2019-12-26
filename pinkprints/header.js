@@ -9,4 +9,4 @@ exports.default = (h, { fileName, author, description, notes }) =>
 *
 * Notes:${h.prefix(notes, ' ')}
 \\******************************************************************************/
-`;
+`.trimStart();

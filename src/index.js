@@ -74,7 +74,7 @@ const createFs = (ctx, argv, basePath) => {
 
       return Promise.resolve(
         argv.preview
-          ? console.log(contents)
+          ? true
           : self
               .mkdirp(path.dirname(file))
               .then(() => self.writeFile(file, contents))
@@ -85,6 +85,10 @@ const createFs = (ctx, argv, basePath) => {
               ? chalk.yellow(`Skipped writing ${relFile}`)
               : chalk.cyan(`Wrote file ${relFile}`)
           );
+
+          if (argv.preview) {
+            console.log(contents);
+          }
         })
         .catch((err) => {
           console.error(chalk.red(`Failed to create ${relFile}`));
@@ -156,7 +160,7 @@ const runList = (exports.runList = (ctx, argv) => {
 
   assert(Object.keys(commands).length, 'No commands found');
 
-  console.log(chalk.magenta('Commands:'));
+  console.log('Commands:');
   console.log(
     Object.keys(commands)
       .map((e) => `  ${chalk.magenta(e)}`)
@@ -176,7 +180,7 @@ const getFsRoot = (ctx, argv) => {
   return outputDir || configDir || ctx.projectRoot;
 };
 
-const createCommandContext = (ctx, argv, name) => {
+const createCommandContext = (ctx, argv) => {
   const getPackageJson = () =>
     requireSafe(path.resolve(ctx.projectRoot, 'package.json'), {});
 
@@ -201,14 +205,14 @@ const createCommandContext = (ctx, argv, name) => {
 
   const fs = createFs(ctx, argv, getFsRoot(ctx, argv));
 
-  const beginTemplate = (templateName, basePath) => {
+  const beginPrint = (templateName, basePath) => {
     const template = getTemplate(templateName);
 
     const parts = templateName.split('.').filter((e) => e !== 'js');
     const extension = parts.length > 1 ? parts[parts.length - 1] : 'js';
 
     const relativeName = fs.withExtension(
-      name.replace(/\./g, path.sep),
+      argv.name.replace(/\./g, path.sep),
       extension
     );
     const fullPath = fs.resolvePath(path.join(basePath, relativeName));
@@ -223,48 +227,49 @@ const createCommandContext = (ctx, argv, name) => {
     };
   };
 
-  const commitTemplate = (t, args = {}) => {
+  const commitPrint = (t, args = {}) => {
     const { template, ...rest } = t;
-    const contents = t
-      .template(templateHelpers, { ...rest, ...args })
-      .trimStart();
+    const contents = template(templateHelpers, {
+      ...rest,
+      ...args,
+    });
     return fs.write(t.fullPath, contents);
   };
 
-  const doTemplate = (templateName, basePath = '.', args = {}) => {
-    const t = beginTemplate(templateName, basePath);
-    return commitTemplate(t, args);
+  const print = (templateName, basePath = '.', args = {}) => {
+    const t = beginPrint(templateName, basePath);
+    return commitPrint(t, args);
   };
 
   return {
     ...ctx,
-    name,
+    name: argv.name,
     getPackageJson,
     getAuthor,
     getGitUser,
     getTemplate,
-    beginTemplate,
-    commitTemplate,
-    doTemplate,
+    print,
+    beginPrint,
+    commitPrint,
     require: requireSafe,
     helpers: templateHelpers,
     fs,
   };
 };
 
-const generate = (exports.generate = (ctx, argv, name, cmd) => {
+const generate = (exports.generate = (ctx, argv, cmd) => {
   assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
 
   const run = typeof cmd === 'function' ? cmd : cmd.run;
   assert(typeof run === 'function', 'Command must be a function!');
 
-  const context = createCommandContext(ctx, argv, name);
+  const context = createCommandContext(ctx, argv);
 
   let result = null;
   try {
     result = run(context, argv);
   } catch (e) {
-    console.log(chalk.red(`Command ${name} threw an error:`));
+    console.log(chalk.red(`Command ${argv.name} threw an error:`));
     console.log(e);
   }
 });
@@ -283,5 +288,5 @@ const runGenerate = (exports.runGenerate = (ctx, argv) => {
       `\n  Available commands: ${Object.keys(commands).join(', ')}`
   );
 
-  generate(ctx, argv, name, command);
+  generate(ctx, argv, command);
 });

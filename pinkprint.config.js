@@ -11,32 +11,28 @@ exports.default = {
       args: ['author', 'description', 'notes'],
 
       run: (ctx, argv) =>
-        ctx.doTemplate('header.js', 'helpers', {
+        ctx.print('header.js', 'helpers', {
           description: argv.description || '',
           notes: argv.notes || '',
         }),
     },
 
-    style: (ctx, argv) => ctx.doTemplate('style.scss', 'style'),
+    style: (ctx, argv) => ctx.print('style.scss', 'style'),
 
     component: (ctx, argv) => {
-      const t = ctx.beginTemplate('Component.jsx', 'components');
-      ctx.commitTemplate(t);
-    },
+      const { helpers } = ctx;
+      console.log(argv.name);
 
-    /*
-    component: (ctx, argv) => {
-      const Component = require('./pinkprints/Component.jsx').default;
+      const parts = argv.name.split('.');
+      const last = parts.pop();
+      argv.name = parts.join('.') + '.' + helpers.pascal(last);
 
-      console.log(
-        Component({
-          name: ctx.name,
-          author: argv.author || '',
-          description: argv.description || '',
-          notes: argv.notes || '',
-        }).trim()
-      );
+      ctx.print('Component.jsx', 'components', {
+        description: argv.description || '',
+        notes: argv.notes || '',
+      });
+
+      ctx.print('style.scss', 'components');
     },
-    */
   },
 };
