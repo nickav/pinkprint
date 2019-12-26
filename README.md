@@ -29,7 +29,7 @@ default function that returns a string.
 
 ```javascript
 // ./pinkprints/hello.js
-exports.default = ($, args) => `Hello ${args.name}!`;
+exports.default = (h, args) => `Hello ${args.name}!`;
 ```
 
 ### Create a new command

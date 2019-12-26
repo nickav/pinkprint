@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
+const { promisify } = require('util');
+
+const { catchAll } = require('./helpers');
 
 const startWith = (str, prefix) =>
   str.startsWith(prefix) ? str : prefix + str;
@@ -53,18 +56,18 @@ const createFs = (exports.createFs = (
     },
 
     writeFile: (...args) =>
-      self.noWrite
-        ? Promise.resolve(true)
-        : util.promisify(fs.writeFile)(...args),
+      self.noWrite ? Promise.resolve(true) : promisify(fs.writeFile)(...args),
 
     mkdirp: (dir) =>
       self.noWrite
         ? Promise.resolve(true)
-        : util.promisify(fs.mkdir)(dir, { recursive: true }),
+        : promisify(fs.mkdir)(dir, { recursive: true }),
 
-    readFileSync: (filePath) => catchAll(fs.readFileSync(filePath, 'utf8'), ''),
+    readFileSync: (filePath) =>
+      catchAll(() => fs.readFileSync(self.resolvePath(filePath), 'utf8'), ''),
 
-    readDirSync: (dir, options) => catchAll(fs.readdirSync(dir, options), []),
+    readDirSync: (dir, options) =>
+      catchAll(() => fs.readdirSync(self.resolvePath(dir), options), []),
   };
 
   return self;

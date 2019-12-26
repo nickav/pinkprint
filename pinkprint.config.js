@@ -33,7 +33,22 @@ exports.default = {
     },
 
     store: (ctx, argv) => {
-      ctx.print('reducer.js', 'store');
+      const { fs } = ctx;
+
+      ctx.print('store.js', 'store').then(() => {
+        const ignoreFiles = ['index.js', 'reducer.js'];
+
+        const files = fs
+          .readDirSync('store')
+          .filter(
+            (file) => !file.startsWith('.') && !ignoreFiles.includes(file)
+          )
+          .map((e) => path.basename(e, '.js'))
+          .sort();
+
+        console.log({ files });
+        ctx.print('reducer.js', 'store/reducer.js', { files });
+      });
     },
   },
 };

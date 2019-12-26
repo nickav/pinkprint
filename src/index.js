@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const util = require('util');
 const chalk = require('chalk');
 
 const {
@@ -140,9 +139,7 @@ const createCommandContext = (ctx, argv) => {
     return template.default;
   };
 
-  const beginPrint = (templateName, basePath) => {
-    const template = getTemplate(templateName);
-
+  const getRelativePath = (templateName, basePath) => {
     const parts = templateName.split('.').filter((e) => e !== 'js');
     const extension = parts.length > 1 ? parts[parts.length - 1] : 'js';
 
@@ -150,12 +147,22 @@ const createCommandContext = (ctx, argv) => {
       path.join(self.path, self.name),
       extension
     );
-    const fullPath = fs.resolvePath(path.join(basePath, relativeName));
+    return path.join(basePath, relativeName);
+  };
+
+  const beginPrint = (templateName, relativePathOrFolder) => {
+    const template = getTemplate(templateName);
+
+    const relativeName = relativePathOrFolder.includes('.')
+      ? relativePathOrFolder
+      : getRelativePath(templateName, relativePathOrFolder);
+
+    const fullPath = fs.resolvePath(relativeName);
 
     return {
       fileName: path.basename(relativeName),
       name: path.basename(relativeName, path.extname(relativeName)),
-      relativeName: path.join(basePath, relativeName),
+      relativeName,
       fullPath,
       author: argv.author || getAuthor(),
       template,
