@@ -75,7 +75,10 @@ const cli = yargs
   .example('pink generate component Button', 'Generate files')
 
   .version('version', packageJson.version)
-  .alias('version', 'v');
+  .alias('version', 'v')
+
+  .usage(`Usage: ${me} <command> [options]`)
+  .command('*', '', () => {}, invalidCommand);
 
 const commands = (ctx.config || {}).commands || [];
 Object.keys(commands).forEach((key) => {
@@ -91,10 +94,9 @@ Object.keys(commands).forEach((key) => {
         yargs.option(arg, typeof arg === 'string' ? { describe: ' ' } : arg)
       );
     },
-    (argv) => main.generate(ctx, argv, argv.name, command)
+    (argv) => main.generate(ctx, argv, command)
   );
 });
 
-cli
-  .usage(`Usage: ${me} <command> [options]`)
-  .command('*', '', () => {}, invalidCommand).argv;
+// finalize the yars cli
+cli.argv;

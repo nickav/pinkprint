@@ -59,6 +59,7 @@ file `./src/greetings/World.js`
 This will run the `component` command in your `pinkprint.config.js`.
 
 More examples:
+
 ```bash
 > pink component foobar               # shorthand for pink generate component
 > pink g component common.MyComponent # output to src/common
@@ -100,8 +101,11 @@ exports.default = {
 
 See an [example config file here](./pinkprint.config.js).
 
-## Context
+## API
 
+### Context
+
+Every command has access to the context and the argv object (from [yargs][yargs]).
 The pinkprint context contains the following:
 
 ```javascript
@@ -139,7 +143,7 @@ The pinkprint context contains the following:
 }
 ```
 
-## Helpers
+### Helpers
 
 There are several built-in [template helpers](./src/template-helpers.js).
 
