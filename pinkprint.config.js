@@ -21,11 +21,8 @@ exports.default = {
 
     component: (ctx, argv) => {
       const { helpers } = ctx;
-      console.log(argv.name);
 
-      const parts = argv.name.split('.');
-      const last = parts.pop();
-      argv.name = parts.join('.') + '.' + helpers.pascal(last);
+      ctx.name = helpers.pascal(ctx.name);
 
       ctx.print('Component.jsx', 'components', {
         description: argv.description || '',
@@ -33,6 +30,10 @@ exports.default = {
       });
 
       ctx.print('style.scss', 'components');
+    },
+
+    store: (ctx, argv) => {
+      ctx.print('reducer.js', 'store');
     },
   },
 };

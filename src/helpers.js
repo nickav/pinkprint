@@ -1,4 +1,5 @@
 const { execSync } = require('child_process');
+const fs = require('fs');
 
 const { findNearestFileSync } = require('./file-utils');
 
@@ -54,4 +55,24 @@ const getGitRoot = (exports.getGitRoot = () => {
 
 const findProjectRoot = (exports.findProjectRoot = () => {
   getGitRoot() || findRoot(['package.json']);
+});
+
+const catchAll = (exports.catchAll = (fn, defaultResult) => {
+  let result = defaultResult;
+  try {
+    result = fn();
+  } catch (e) {}
+  return result;
+});
+
+const requireSafe = (exports.requireSafe = (file, defaultValue = {}) => {
+  if (!fs.existsSync(file) && !fs.existsSync(file + '.js')) {
+    return null;
+  }
+
+  try {
+    return require(file);
+  } catch (err) {
+    return defaultValue;
+  }
 });

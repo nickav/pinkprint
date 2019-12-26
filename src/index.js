@@ -1,34 +1,17 @@
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
-
 const chalk = require('chalk');
 
-const { assert, findProjectRoot, getGitUser } = require('./helpers');
+const {
+  assert,
+  findProjectRoot,
+  getGitUser,
+  catchAll,
+  requireSafe,
+} = require('./helpers');
+const { createFs } = require('./fs');
 const templateHelpers = require('./template-helpers');
-
-const catchAll = (fn, defaultResult) => {
-  let result = defaultResult;
-  try {
-    result = fn();
-  } catch (e) {}
-  return result;
-};
-
-const requireSafe = (file, defaultValue = {}) => {
-  if (!fs.existsSync(file) && !fs.existsSync(file + '.js')) {
-    return null;
-  }
-
-  try {
-    return require(file);
-  } catch (err) {
-    return defaultValue;
-  }
-};
-
-const startWith = (str, prefix) =>
-  str.startsWith(prefix) ? str : prefix + str;
 
 const getPinkprintsDir = (projectRoot) =>
   path.resolve(projectRoot, 'pinkprints');
@@ -49,68 +32,6 @@ const createContext = (exports.createContext = () => {
     config,
   };
 });
-
-const createFs = (mount, options = { relativePath: '', noWrite: false }) => {
-  const self = {
-    mount,
-
-    defaultExtension: '',
-
-    ...options,
-
-    setDefaultExtension: (ext) => (self.defaultExtension = ext),
-
-    withExtension: (name, ext) =>
-      path.basename(name).includes('.') ? name : name + startWith(ext, '.'),
-
-    resolvePath: (dest) => {
-      const filePath = path.resolve(self.mount, dest);
-      return self.defaultExtension
-        ? self.withExtension(filePath, self.defaultExtension)
-        : filePath;
-    },
-
-    write: (dest, contents) => {
-      const file = self.resolvePath(dest);
-      const relFile = path.relative(self.relativePath || self.mount, file);
-
-      return Promise.resolve(
-        self
-          .mkdirp(path.dirname(file))
-          .then(() => self.writeFile(file, contents))
-      )
-        .then(() => {
-          console.log(
-            self.noWrite
-              ? chalk.yellow(`Skipped writing ${relFile}`)
-              : chalk.cyan(`Wrote file ${relFile}`)
-          );
-
-          self.noWrite && console.log(contents);
-        })
-        .catch((err) => {
-          console.error(chalk.red(`Failed to create ${relFile}`));
-          console.error(err);
-        });
-    },
-
-    writeFile: (...args) =>
-      self.noWrite
-        ? Promise.resolve(true)
-        : util.promisify(fs.writeFile)(...args),
-
-    mkdirp: (dir) =>
-      self.noWrite
-        ? Promise.resolve(true)
-        : util.promisify(fs.mkdir)(dir, { recursive: true }),
-
-    readFileSync: (filePath) => catchAll(fs.readFileSync(filePath, 'utf8'), ''),
-
-    readDirSync: (dir, options) => catchAll(fs.readdirSync(dir, options), []),
-  };
-
-  return self;
-};
 
 const getFsRoot = (ctx, argv) => {
   const outputDir = argv.outputDir
@@ -154,7 +75,7 @@ exports.default = {
   }
 }`;
 
-  fs.writeFileSync(configFile, contents.trim());
+  fs.writeFileSync(ctx.configFile, contents.trim());
   console.log(chalk.green(`pinkprint.config.js created successfully!`));
 });
 
@@ -184,7 +105,19 @@ const runList = (exports.runList = (ctx, argv) => {
   );
 });
 
+const normalizePath = (filePath) => filePath.replace(/[\/\\\.]/g, path.sep);
+
+const extractPathAndName = (fullPath) => {
+  const parts = fullPath.split(path.sep);
+  const name = parts.pop();
+  return [parts.join(path.sep), name];
+};
+
 const createCommandContext = (ctx, argv) => {
+  const [pathName, name] = extractPathAndName(normalizePath(argv.name));
+
+  const fs = createFs(getFsRoot(ctx, argv), getDefaultFsOptions(ctx, argv));
+
   const getPackageJson = () =>
     requireSafe(path.resolve(ctx.projectRoot, 'package.json'), {});
 
@@ -207,8 +140,6 @@ const createCommandContext = (ctx, argv) => {
     return template.default;
   };
 
-  const fs = createFs(getFsRoot(ctx, argv), getDefaultFsOptions(ctx, argv));
-
   const beginPrint = (templateName, basePath) => {
     const template = getTemplate(templateName);
 
@@ -216,7 +147,7 @@ const createCommandContext = (ctx, argv) => {
     const extension = parts.length > 1 ? parts[parts.length - 1] : 'js';
 
     const relativeName = fs.withExtension(
-      argv.name.replace(/\./g, path.sep),
+      path.join(self.path, self.name),
       extension
     );
     const fullPath = fs.resolvePath(path.join(basePath, relativeName));
@@ -245,9 +176,10 @@ const createCommandContext = (ctx, argv) => {
     return commitPrint(t, args);
   };
 
-  return {
+  const self = {
     ...ctx,
-    name: argv.name,
+    path: pathName,
+    name,
     getPackageJson,
     getAuthor,
     getGitUser,
@@ -259,6 +191,8 @@ const createCommandContext = (ctx, argv) => {
     helpers: templateHelpers,
     fs,
   };
+
+  return self;
 };
 
 const generate = (exports.generate = (ctx, argv, cmd) => {
