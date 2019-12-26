@@ -14,26 +14,12 @@ Install [yarn][yarn-install]. Then run:
 
 Now run `pink init`. This will create an empty config file in your project root.
 
-### Alias
-
-It is also recommended to add the following to your `package.json`:
-
-```javascript
-{
-  "scripts": {
-    "g": "bin/pink g"
-  }
-}
-```
-
-Now you can use `yarn g <command>` as an alias for `pink generate`.
-
 ## Getting Started
 
 ### Create a new pinkprint
 
 ```bash
-> pink new component
+> pink new hello
 ```
 
 This will create a new template file in your project root `./pinkprints/hello.js`.
@@ -56,18 +42,12 @@ to your [config file](#config).
 
 exports.default = {
   commands: {
-    file: (ctx, argv) => {
-      const template = ctx.getTemplate('component');
-      const name = fs.withExtension(ctx.name, 'js');
-      const args = { name };
-      ctx.write(name, template(ctx.helpers, args));
-    },
+    file: (ctx, argv) => ctx.print('file', 'src/files'),
   },
 };
 ```
 
-Commands can do anything but primarily are responsible for evaluating templates
-and calling `ctx.write` to output files.
+Now you can run the command with `pink g file name`.
 
 ### Run a command
 
@@ -78,6 +58,20 @@ and calling `ctx.write` to output files.
 This will run the `component` command in your `pinkprint.config.js`.
 
 You can also use `pink component foobar` as a shorthand.
+
+#### Generate Alias
+
+It is also recommended to add the following to your `package.json`:
+
+```javascript
+{
+  "scripts": {
+    "g": "bin/pink g"
+  }
+}
+```
+
+Now you can use `yarn g <command>` as an alias for `pink generate`.
 
 ## Config
 
@@ -93,7 +87,8 @@ exports.default = {
   },
 
   commands: {
-    file: (ctx, argv) => {},
+    // all commands live here
+    file: (ctx, argv) => ctx.print('file', 'src/files'),
   },
 };
 ```

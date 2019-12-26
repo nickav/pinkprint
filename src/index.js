@@ -50,11 +50,13 @@ const createContext = (exports.createContext = () => {
   };
 });
 
-const createFs = (ctx, argv, basePath) => {
+const createFs = (mount, options = { relativePath: '', noWrite: false }) => {
   const self = {
-    basePath,
+    mount,
 
     defaultExtension: '',
+
+    ...options,
 
     setDefaultExtension: (ext) => (self.defaultExtension = ext),
 
@@ -62,7 +64,7 @@ const createFs = (ctx, argv, basePath) => {
       path.basename(name).includes('.') ? name : name + startWith(ext, '.'),
 
     resolvePath: (dest) => {
-      const filePath = path.resolve(self.basePath, dest);
+      const filePath = path.resolve(self.mount, dest);
       return self.defaultExtension
         ? self.withExtension(filePath, self.defaultExtension)
         : filePath;
@@ -70,25 +72,21 @@ const createFs = (ctx, argv, basePath) => {
 
     write: (dest, contents) => {
       const file = self.resolvePath(dest);
-      const relFile = path.relative(ctx.projectRoot, file);
+      const relFile = path.relative(self.relativePath || self.mount, file);
 
       return Promise.resolve(
-        argv.preview
-          ? true
-          : self
-              .mkdirp(path.dirname(file))
-              .then(() => self.writeFile(file, contents))
+        self
+          .mkdirp(path.dirname(file))
+          .then(() => self.writeFile(file, contents))
       )
         .then(() => {
           console.log(
-            argv.preview
+            self.noWrite
               ? chalk.yellow(`Skipped writing ${relFile}`)
               : chalk.cyan(`Wrote file ${relFile}`)
           );
 
-          if (argv.preview) {
-            console.log(contents);
-          }
+          self.noWrite && console.log(contents);
         })
         .catch((err) => {
           console.error(chalk.red(`Failed to create ${relFile}`));
@@ -96,9 +94,15 @@ const createFs = (ctx, argv, basePath) => {
         });
     },
 
-    writeFile: (...args) => util.promisify(fs.writeFile)(...args),
+    writeFile: (...args) =>
+      self.noWrite
+        ? Promise.resolve(true)
+        : util.promisify(fs.writeFile)(...args),
 
-    mkdirp: (dir) => util.promisify(fs.mkdir)(dir, { recursive: true }),
+    mkdirp: (dir) =>
+      self.noWrite
+        ? Promise.resolve(true)
+        : util.promisify(fs.mkdir)(dir, { recursive: true }),
 
     readFileSync: (filePath) => catchAll(fs.readFileSync(filePath, 'utf8'), ''),
 
@@ -107,6 +111,23 @@ const createFs = (ctx, argv, basePath) => {
 
   return self;
 };
+
+const getFsRoot = (ctx, argv) => {
+  const outputDir = argv.outputDir
+    ? path.resolve(process.cwd(), argv.outputDir)
+    : '';
+  const configOutputPath = (ctx.config.output || {}).path || '';
+  const configDir = configOutputPath
+    ? path.resolve(ctx.projectRoot, configOutputPath)
+    : '';
+
+  return outputDir || configDir || ctx.projectRoot;
+};
+
+const getDefaultFsOptions = (ctx, argv) => ({
+  relativePath: ctx.projectRoot,
+  noWrite: argv.preview,
+});
 
 const assertNoConfigErrors = (configFile, config) => {
   assert(
@@ -138,19 +159,14 @@ exports.default = {
 });
 
 const runNew = (exports.runNew = (ctx, argv) => {
-  const dir = ctx.templateDir;
-
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir);
-  }
+  const fs = createFs(ctx.templateDir, getDefaultFsOptions(ctx, argv));
 
   const name = argv.name.endsWith('.js') ? argv.name : argv.name + '.js';
-  const newFile = path.resolve(dir, name);
-  const contents = `exports.default = (ctx) => \`\`;`;
+  const contents = `exports.default = (h, args) => \`\`.trim();`;
 
-  fs.writeFileSync(newFile, contents);
-  const relativeName = path.relative(process.cwd(), newFile);
-  console.log(chalk.green(`${relativeName} created successfully!`));
+  fs.write(name, contents).then(() => {
+    console.log('Consider adding a new command to your config file');
+  });
 });
 
 const runList = (exports.runList = (ctx, argv) => {
@@ -167,18 +183,6 @@ const runList = (exports.runList = (ctx, argv) => {
       .join('\n')
   );
 });
-
-const getFsRoot = (ctx, argv) => {
-  const outputDir = argv.outputDir
-    ? path.resolve(process.cwd(), argv.outputDir)
-    : '';
-  const configOutputPath = (ctx.config.output || {}).path || '';
-  const configDir = configOutputPath
-    ? path.resolve(ctx.projectRoot, configOutputPath)
-    : '';
-
-  return outputDir || configDir || ctx.projectRoot;
-};
 
 const createCommandContext = (ctx, argv) => {
   const getPackageJson = () =>
@@ -203,7 +207,7 @@ const createCommandContext = (ctx, argv) => {
     return template.default;
   };
 
-  const fs = createFs(ctx, argv, getFsRoot(ctx, argv));
+  const fs = createFs(getFsRoot(ctx, argv), getDefaultFsOptions(ctx, argv));
 
   const beginPrint = (templateName, basePath) => {
     const template = getTemplate(templateName);

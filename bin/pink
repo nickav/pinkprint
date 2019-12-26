@@ -45,7 +45,7 @@ const cli = yargs
   .command(
     ['new <name>', 'n'],
     'Creates a new pinkprint',
-    () => {},
+    commandOptions,
     (argv) => main.runNew(ctx, argv)
   )
 
