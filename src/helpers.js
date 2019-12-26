@@ -11,25 +11,6 @@ const assert = (exports.assert = (cond, error) => {
   process.exit(1);
 });
 
-const findRoot = (exports.findRoot = (filenames, error = true) => {
-  let cwd = process.cwd();
-  let root;
-
-  for (let i in filenames) {
-    let filename = filenames[i];
-    root = findNearestFileSync(filename, cwd);
-    if (root) break;
-  }
-
-  if (!root && error) {
-    console.log(`Error! Could not find '${filenames[0]}' directory in:`);
-    console.log(utils.parents(cwd));
-    process.exit(1);
-  }
-
-  return root;
-});
-
 /** Get git user name and email. */
 const getGitUser = (exports.getGitUser = () => {
   let name;
@@ -51,10 +32,6 @@ const getGitRoot = (exports.getGitRoot = () => {
       .toString()
       .trim();
   } catch (e) {}
-});
-
-const findProjectRoot = (exports.findProjectRoot = () => {
-  getGitRoot() || findRoot(['package.json']);
 });
 
 const catchAll = (exports.catchAll = (fn, defaultResult) => {

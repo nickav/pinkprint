@@ -4,24 +4,30 @@ const chalk = require('chalk');
 
 const {
   assert,
-  findProjectRoot,
   getGitUser,
+  getGitRoot,
   catchAll,
   requireSafe,
 } = require('./helpers');
 const { createFs } = require('./fs');
+const { findNearestFileSync, parents } = require('./file-utils');
 const templateHelpers = require('./template-helpers');
 
-const getPinkprintsDir = (projectRoot) =>
-  path.resolve(projectRoot, 'pinkprints');
+const findProjectRoot = () => {
+  const cwd = process.cwd();
+  return findNearestFileSync('package.json', cwd) || getGitRoot();
+};
 
-const getPinkprintsConfig = (projectRoot) =>
-  path.resolve(projectRoot, 'pinkprint.config.js');
+const getPinkprintsDir = (fromDir) => path.resolve(fromDir, 'pinkprints');
+
+const findPinkprintsConfig = (fromDir) => {
+  return findNearestFileSync('pinkprint.config.js', fromDir);
+};
 
 const createContext = (exports.createContext = () => {
   const projectRoot = findProjectRoot() || process.cwd();
-  const templateDir = getPinkprintsDir(projectRoot);
-  const configFile = getPinkprintsConfig(projectRoot);
+  const configFile = findPinkprintsConfig(process.cwd());
+  const templateDir = configFile && getPinkprintsDir(path.dirname(configFile));
   const config = (requireSafe(configFile) || {}).default || {};
 
   return {
@@ -49,13 +55,18 @@ const getDefaultFsOptions = (ctx, argv) => ({
   noWrite: argv.preview,
 });
 
-const assertNoConfigErrors = (configFile, config) => {
+const assertNoConfigErrors = (configFile) => {
   assert(
-    config,
+    configFile,
     () =>
-      chalk.red(`Missing pinkprint.config.js file!`) +
-      `\n  Expected ${configFile}`
+      chalk.red(`Missing pinkprint.config.js file!\n`) +
+      'Searched:\n' +
+      parents(process.cwd())
+        .map((e) => `  ${e}`)
+        .join('\n')
   );
+
+  const config = requireSafe(configFile) || {};
 
   assert(
     config.default,
@@ -90,7 +101,7 @@ const runNew = (exports.runNew = (ctx, argv) => {
 });
 
 const runList = (exports.runList = (ctx, argv) => {
-  assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
+  assertNoConfigErrors(ctx.configFile);
 
   const commands = ctx.config.commands || {};
 
@@ -118,7 +129,7 @@ const createCommandContext = (ctx, argv) => {
   const fs = createFs(getFsRoot(ctx, argv), getDefaultFsOptions(ctx, argv));
 
   const getPackageJson = () =>
-    requireSafe(path.resolve(ctx.projectRoot, 'package.json'), {});
+    requireSafe(path.resolve(ctx.projectRoot, 'package.json')) || {};
 
   const getAuthor = () => getPackageJson().author || getGitUser().name || '';
 
@@ -207,7 +218,7 @@ const createCommandContext = (ctx, argv) => {
 };
 
 const generate = (exports.generate = (ctx, argv, cmd) => {
-  assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
+  assertNoConfigErrors(ctx.configFile);
 
   const run = typeof cmd === 'function' ? cmd : cmd.run;
   assert(typeof run === 'function', 'Command must be a function!');
@@ -224,7 +235,7 @@ const generate = (exports.generate = (ctx, argv, cmd) => {
 });
 
 const runGenerate = (exports.runGenerate = (ctx, argv) => {
-  assertNoConfigErrors(ctx.configFile, requireSafe(ctx.configFile));
+  assertNoConfigErrors(ctx.configFile);
 
   const { command: commandName, name } = argv;
   const commands = ctx.config.commands || {};

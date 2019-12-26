@@ -38,10 +38,10 @@ const findNearestFileSync = (exports.findNearestFileSync = (name, dir) => {
 });
 
 /** Returns an array of parent directories (including dir). */
-const parents = (dir) => {
+const parents = (exports.parents = (dir) => {
   let result = [];
   do {
     result.push(dir);
   } while ((dir = getParentDirectory(dir)));
   return result;
-};
+});
