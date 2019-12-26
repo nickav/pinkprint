@@ -12,7 +12,7 @@ Install [yarn][yarn-install]. Then run:
 > yarn add pinkprint
 ```
 
-Now run `pink init`. This will create an empty config file in your project root.
+Now run `pink init`. This will create an empty [config file](#config) in your project root.
 
 ## Getting Started
 
@@ -29,7 +29,7 @@ default function that returns a string.
 
 ```javascript
 // ./pinkprints/hello.js
-exports.default = (h, args) => `Hello ${args.name}!`;
+exports.default = (h, args) => `Hello, ${args.name}!`;
 ```
 
 ### Create a new command
@@ -42,12 +42,13 @@ to your [config file](#config).
 
 exports.default = {
   commands: {
-    file: (ctx, argv) => ctx.print('file', 'src/files'),
+    greet: (ctx, argv) => ctx.print('hello', 'src/greetings'),
   },
 };
 ```
 
-Now you can run the command with `pink g file name`.
+Now you can run the command with `pink g greet World`. This will create a new
+file `./src/greetings/World.js`
 
 ### Run a command
 
@@ -57,7 +58,11 @@ Now you can run the command with `pink g file name`.
 
 This will run the `component` command in your `pinkprint.config.js`.
 
-You can also use `pink component foobar` as a shorthand.
+More examples:
+```bash
+> pink component foobar               # shorthand for pink generate component
+> pink g component common.MyComponent # output to src/common
+```
 
 #### Generate Alias
 
@@ -104,30 +109,24 @@ The pinkprint context contains the following:
   projectRoot: '/Users/nick/dev/pinkprint',
   templateDir: '/Users/nick/dev/pinkprint/pinkprints',
   configFile: '/Users/nick/dev/pinkprint/pinkprint.config.js',
-  config: { output: { path: './src' }, commands: { helper: [Object] } },
-  name: 'foo.bar',
+  config: {}, // loaded config file
+  path: '',
+  name: 'world',
+  getPackageJson: [Function: getPackageJson],
   getAuthor: [Function: getAuthor],
   getGitUser: [Function],
-  getPackageJson: [Function: getPackageJson],
   getTemplate: [Function: getTemplate],
-  require: [Function: requireSafe],
-  helpers: {
-    camel: [Function: camelize],
-    pascal: [Function: pascalize],
-    snake: [Function: decamelize],
-    kebob: [Function],
-    plural: [Function: pluralize],
-    upper: [Function],
-    lower: [Function],
-    prefix: [Function],
-    sqldate: [Function],
-    moment: [Function: dateHelper],
-    join: [Function],
-    default: [Function]
-  },
+  print: [Function: print],
+  beginPrint: [Function: beginPrint],
+  commitPrint: [Function: commitPrint],
+  assert: [Function],
+  require: [Function],
+  helpers: {}, // template helpers
   fs: {
-    basePath: '/Users/nick/dev/pinkprint/src',
+    mount: '/Users/nick/dev/pinkprint/src',
     defaultExtension: '',
+    relativePath: '/Users/nick/dev/pinkprint',
+    noWrite: true,
     setDefaultExtension: [Function: setDefaultExtension],
     withExtension: [Function: withExtension],
     resolvePath: [Function: resolvePath],

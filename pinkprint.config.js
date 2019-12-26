@@ -6,6 +6,8 @@ exports.default = {
   },
 
   commands: {
+    greet: (ctx, argv) => ctx.print('hello', 'greetings'),
+
     helper: {
       description: 'Creates a new helper file',
       args: ['author', 'description', 'notes'],
@@ -47,6 +49,7 @@ exports.default = {
           .sort();
 
         console.log({ files });
+
         ctx.print('reducer.js', 'store/reducer.js', { files });
       });
     },

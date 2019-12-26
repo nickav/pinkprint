@@ -187,13 +187,17 @@ const createCommandContext = (ctx, argv) => {
     ...ctx,
     path: pathName,
     name,
+
     getPackageJson,
     getAuthor,
     getGitUser,
     getTemplate,
+
     print,
     beginPrint,
     commitPrint,
+
+    assert,
     require: requireSafe,
     helpers: templateHelpers,
     fs,
