@@ -15,13 +15,16 @@ const templateHelpers = require('./template-helpers');
 
 const findProjectRoot = () => {
   const cwd = process.cwd();
-  return findNearestFileSync('package.json', cwd) || getGitRoot();
+  const packageJson = findNearestFileSync('package.json', cwd);
+  return packageJson ? path.dirname(packageJson) : getGitRoot();
 };
+
+const CONFIG_FILE = 'pinkprint.config.js';
 
 const getPinkprintsDir = (fromDir) => path.resolve(fromDir, 'pinkprints');
 
 const findPinkprintsConfig = (fromDir) => {
-  return findNearestFileSync('pinkprint.config.js', fromDir);
+  return findNearestFileSync(CONFIG_FILE, fromDir);
 };
 
 const createContext = (exports.createContext = () => {
@@ -59,7 +62,7 @@ const assertNoConfigErrors = (configFile) => {
   assert(
     configFile,
     () =>
-      chalk.red(`Missing pinkprint.config.js file!\n`) +
+      chalk.red(`Missing ${CONFIG_FILE} file!\n`) +
       'Searched:\n' +
       parents(process.cwd())
         .map((e) => `  ${e}`)
@@ -77,7 +80,11 @@ const assertNoConfigErrors = (configFile) => {
 };
 
 const runInit = (exports.runInit = (ctx, argv) => {
-  assert(!fs.existsSync(ctx.configFile), 'Config file already exists.');
+  const projectConfigFile = path.join(ctx.projectRoot, CONFIG_FILE);
+  assert(
+    !fs.existsSync(projectConfigFile),
+    `Config file already exists.\n  Found: ${projectConfigFile}`
+  );
 
   const contents = `
 exports.default = {
@@ -85,8 +92,11 @@ exports.default = {
   }
 }`;
 
-  fs.writeFileSync(ctx.configFile, contents.trim());
-  console.log(chalk.green(`pinkprint.config.js created successfully!`));
+  fs.writeFileSync(projectConfigFile, contents.trim());
+  console.log(
+    chalk.green(`${CONFIG_FILE} created successfully!`) +
+      `\n  Wrote ${projectConfigFile}`
+  );
 });
 
 const runNew = (exports.runNew = (ctx, argv) => {
@@ -96,7 +106,10 @@ const runNew = (exports.runNew = (ctx, argv) => {
   const contents = `exports.default = (h, args) => \`\`.trim();`;
 
   fs.write(name, contents).then(() => {
-    console.log('Consider adding a new command to your config file');
+    console.log(
+      chalk.green(`${argv.name} template created successfully!`) +
+        `\n  Consider adding a new command to your config file`
+    );
   });
 });
 
