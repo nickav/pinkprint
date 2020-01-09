@@ -15,7 +15,7 @@ const templateHelpers = require('./template-helpers');
 
 const findProjectRoot = () => {
   const cwd = process.cwd();
-  return findNearestFileSync('package.json', cwd) || getGitRoot();
+  return path.dirname(findNearestFileSync('package.json', cwd)) || getGitRoot();
 };
 
 const getPinkprintsDir = (fromDir) => path.resolve(fromDir, 'pinkprints');
