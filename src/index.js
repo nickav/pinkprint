@@ -250,6 +250,7 @@ const createCommandContext = (ctx, argv) => {
     assert,
     require: requireSafe,
     helpers: templateHelpers,
+
     fs,
   };
 

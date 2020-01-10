@@ -100,7 +100,7 @@ exports.default = {
 
   commands: {
     // all commands live here
-    file: (ctx, argv) => ctx.print('file', 'src/files'),
+    file: (ctx, argv) => ctx.print('file', { basePath: 'files' }),
   },
 };
 ```
@@ -120,18 +120,22 @@ The pinkprint context contains the following:
   templateDir: '/Users/nick/dev/pinkprint/pinkprints',
   configFile: '/Users/nick/dev/pinkprint/pinkprint.config.js',
   config: {}, // loaded config file
+
   path: '',
   name: 'world',
+
   getPackageJson: [Function: getPackageJson],
   getAuthor: [Function: getAuthor],
   getGitUser: [Function],
   getTemplate: [Function: getTemplate],
+
   print: [Function: print],
-  beginPrint: [Function: beginPrint],
-  commitPrint: [Function: commitPrint],
+  string: [Function: string],
+
   assert: [Function],
   require: [Function],
   helpers: {}, // template helpers
+
   fs: {
     mount: '/Users/nick/dev/pinkprint/src',
     defaultExtension: '',
