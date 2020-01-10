@@ -5,7 +5,7 @@ exports.default = {
 
   commands: {
     // The most basic print which defaults to using the
-    // template file with name of command
+    // template file with name of the command
     hello: (ctx) => ctx.print(),
 
     // A print using the template file hello.js the basePath ./greetings

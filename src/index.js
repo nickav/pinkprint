@@ -103,7 +103,14 @@ const runNew = (exports.runNew = (ctx, argv) => {
   const fs = createFs(ctx.templateDir, getDefaultFsOptions(ctx, argv));
 
   const name = argv.name.endsWith('.js') ? argv.name : argv.name + '.js';
-  const contents = `exports.default = (h, args) => \`\`.trim();`;
+  const contents = `exports.default = {
+  generate: (args, h, argv, ctx) => \`Hello, $\{args.name}!\`,
+
+  //name: (name, h) => \`\`,
+  //extension: '.js',
+  //pre: (args, h, argv, ctx) => {},
+  //post: (args, h, argv, ctx) => {},
+};`;
 
   fs.write(name, contents).then(() => {
     console.log(
@@ -151,6 +158,7 @@ const createCommandContext = (ctx, argv) => {
     name: (name) => name,
     extension: '.js',
   };
+
   const getTemplate = (name, templateOverride, fromTemplate) => {
     const nameWithExt = `${name}.js`;
 
@@ -263,6 +271,8 @@ const generate = (exports.generate = (ctx, argv, cmd) => {
     console.log(chalk.red(`Command ${argv.name} threw an error:`));
     console.log(e);
   }
+
+  return result;
 });
 
 const runGenerate = (exports.runGenerate = (ctx, argv) => {

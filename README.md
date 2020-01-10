@@ -24,12 +24,18 @@ Now run `pink init`. This will create an empty [config file](#config) in your pr
 
 This will create a new template file in your project root `./pinkprints/hello.js`.
 
-Pinkprint templates are written in vanilla JavaScript and by convention export a
-default function that returns a string.
+Pinkprint templates are written in JavaScript and export a
+default object in the following shape:
 
 ```javascript
 // ./pinkprints/hello.js
-exports.default = (h, args) => `Hello, ${args.name}!`;
+exports.default = {
+  name: (name, h) => 'hello',           // function to generate file name
+  extension: '.js',                     // file extension
+  generate: (args, h, argv, ctx) => ``, // function returning string
+  pre: (args, h, argv, ctx) => {},      // function that runs before `generate`
+  post: (args, h, argv, ctx) => {},     // function that runs after `generate`
+}
 ```
 
 ### Create a new command
@@ -42,7 +48,7 @@ to your [config file](#config).
 
 exports.default = {
   commands: {
-    greet: (ctx, argv) => ctx.print('hello', 'src/greetings'),
+    greet: (ctx, argv) => ctx.print('hello', { basePath: 'src/greetings' }),
   },
 };
 ```
