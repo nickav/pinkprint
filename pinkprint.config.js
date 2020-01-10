@@ -1,57 +1,47 @@
-const path = require('path');
-
 exports.default = {
   output: {
-    path: './src',
+    path: './output',
   },
 
   commands: {
-    greet: (ctx, argv) => ctx.print('hello', 'greetings'),
+    // The most basic print which defaults to using the
+    // template file with name of command
+    hello: (ctx) => ctx.print(),
 
+    // A print using the template file hello.js the basePath ./greetings
+    greet: (ctx) => ctx.print('hello', { basePath: 'greetings' }),
+
+    // A print without a template file with the
+    // required generate property
+    foo: (ctx) =>
+      ctx.print('foo', {
+        extension: '.foo',
+        generate: (args) =>
+          `A foo file without a template file named ${args.name}`,
+      }),
+
+    // A command with meta information and uses the default fileName function
     helper: {
       description: 'Creates a new helper file',
       args: ['author', 'description', 'notes'],
 
-      run: (ctx, argv) =>
-        ctx.print('header.js', 'helpers', {
-          description: argv.description || '',
-          notes: argv.notes || '',
-        }),
+      run: (ctx) => ctx.print('header', { basePath: 'utils' }),
     },
 
-    style: (ctx, argv) => ctx.print('style.scss', 'style'),
+    // A print that overrides the extension in the template file
+    style: (ctx) => ctx.print('style', { extension: '.css' }),
 
-    component: (ctx, argv) => {
-      const { helpers } = ctx;
-
-      ctx.name = helpers.pascal(ctx.name);
-
-      ctx.print('Component.jsx', 'components', {
-        description: argv.description || '',
-        notes: argv.notes || '',
-      });
-
-      ctx.print('style.scss', 'components');
+    // A command that prints multiple files
+    component: (ctx) => {
+      ctx.print('component', { basePath: 'components' });
+      ctx.print('style', { basePath: 'components' });
     },
 
-    store: (ctx, argv) => {
-      const { fs } = ctx;
+    // An example of files that depend on previous files being generated first
+    store: async (ctx) => {
+      await ctx.print('store', { basePath: 'store' });
 
-      ctx.print('store.js', 'store').then(() => {
-        const ignoreFiles = ['index.js', 'reducer.js'];
-
-        const files = fs
-          .readDirSync('store')
-          .filter(
-            (file) => !file.startsWith('.') && !ignoreFiles.includes(file)
-          )
-          .map((e) => path.basename(e, '.js'))
-          .sort();
-
-        console.log({ files });
-
-        ctx.print('reducer.js', 'store/reducer.js', { files });
-      });
+      ctx.print('reducer', { basePath: 'store' });
     },
   },
 };

@@ -1,1 +1,4 @@
-exports.default = (h, args) => `Hello, ${args.name}!`;
+exports.default = {
+  extension: '.pinkprinted',
+  generate: (args) => `Hello, ${args.name}!`,
+};

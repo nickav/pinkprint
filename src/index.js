@@ -146,46 +146,45 @@ const createCommandContext = (ctx, argv) => {
 
   const getAuthor = () => getPackageJson().author || getGitUser().name || '';
 
-  const getTemplate = (name) => {
-    const templatePath = name.includes('pinkprints/')
-      ? path.resolve(ctx.projectRoot, name)
-      : path.resolve(ctx.templateDir, name);
+  const defaultPrintTemplate = {
+    basePath: '.',
+    name: (name) => name,
+    extension: '.js',
+  };
+  const getTemplate = (name, templateOverride, fromTemplate) => {
+    const nameWithExt = `${name}.js`;
 
-    const template = requireSafe(templatePath, null);
+    const templatePath = path.resolve(ctx.templateDir, nameWithExt);
 
-    assert(
-      template,
-      () =>
-        chalk.red(`Missing template file: ${name}`) +
-        `\n  Searched ${templatePath}`
+    const templateFile = (requireSafe(templatePath, null) || {}).default || {};
+
+    const { pre, generate, post, ...from } = fromTemplate;
+
+    const template = {
+      ...defaultPrintTemplate,
+      ...templateFile,
+      ...from,
+      ...templateOverride,
+    };
+
+    assert(template.generate, () =>
+      chalk.red(`Template ${name} does not have a generate function`)
     );
 
-    return template.default;
+    return template;
   };
 
-  const getRelativePath = (templateName, basePath) => {
-    const parts = templateName.split('.').filter((e) => e !== 'js');
-    const extension = parts.length > 1 ? parts[parts.length - 1] : 'js';
+  const getPrintArgs = (template) => {
+    const name = template.name(self.name, templateHelpers);
+    const fileName = name + template.extension;
 
-    const relativeName = fs.withExtension(
-      path.join(self.path, self.name),
-      extension
-    );
-    return path.join(basePath, relativeName);
-  };
-
-  const beginPrint = (templateName, relativePathOrFolder) => {
-    const template = getTemplate(templateName);
-
-    const relativeName = relativePathOrFolder.includes('.')
-      ? relativePathOrFolder
-      : getRelativePath(templateName, relativePathOrFolder);
+    const relativeName = path.join(template.basePath, self.path, fileName);
 
     const fullPath = fs.resolvePath(relativeName);
 
     return {
-      fileName: path.basename(relativeName),
-      name: path.basename(relativeName, path.extname(relativeName)),
+      name,
+      fileName,
       relativeName,
       fullPath,
       author: argv.author || getAuthor(),
@@ -193,18 +192,38 @@ const createCommandContext = (ctx, argv) => {
     };
   };
 
-  const commitPrint = (t, args = {}) => {
-    const { template, ...rest } = t;
-    const contents = template(templateHelpers, {
-      ...rest,
-      ...args,
-    });
-    return fs.write(t.fullPath, contents);
+  // TODO make (pre -> generate -> post) atomic
+  const _generate = async (
+    writeFiles,
+    templateName = argv.command,
+    templateOverride = {},
+    fromTemplate = {}
+  ) => {
+    const template = getTemplate(templateName, templateOverride, fromTemplate);
+    const printArgs = getPrintArgs(template);
+
+    const params = [printArgs, templateHelpers, argv, self];
+
+    try {
+      await (template.pre ? template.pre(...params) : Promise.resolve());
+
+      const contents = template.generate(...params);
+      if (writeFiles) await fs.write(printArgs.fullPath, contents);
+
+      await (template.post ? template.post(...params) : Promise.resolve());
+
+      return contents;
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const print = (templateName, basePath = '.', args = {}) => {
-    const t = beginPrint(templateName, basePath);
-    return commitPrint(t, args);
+  const string = (...params) => {
+    return _generate(false, ...params);
+  };
+
+  const print = (...params) => {
+    return _generate(true, ...params);
   };
 
   const self = {
@@ -218,8 +237,7 @@ const createCommandContext = (ctx, argv) => {
     getTemplate,
 
     print,
-    beginPrint,
-    commitPrint,
+    string,
 
     assert,
     require: requireSafe,

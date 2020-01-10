@@ -1,8 +1,11 @@
-const header = require('./header').default;
+exports.default = {
+  pre: async (args, h, argv, ctx) => {
+    args.header = await ctx.string('header', {}, args.template);
+  },
 
-exports.default = (h, args) =>
-  `
-${header(h, args)}
+  generate: (args) =>
+    `
+${args.header}
 //------------------------------------------------------------------------------
 // Node Modules ----------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -24,4 +27,5 @@ export default (state = initialState, action) => {
     }
   }
 };
-`.trim();
+`.trim(),
+};
