@@ -5,6 +5,7 @@ exports.default = {
 
   pre: async (args, h, argv, ctx) => {
     args.header = await ctx.string('header', {}, args.template);
+    args.style = ctx.getPrintArgs('style');
   },
 
   generate: (args) =>
@@ -16,7 +17,7 @@ import React from 'react';
 import classNames from 'classnames';
 // -----------------------------------------------------------------------------
 // Style -----------------------------------------------------------------------
-import styles from './${args.name}.scss';
+import styles from './${args.style.fileName}';
 //------------------------------------------------------------------------------
 // Components ------------------------------------------------------------------
 //------------------------------------------------------------------------------
