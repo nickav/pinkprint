@@ -159,8 +159,12 @@ const createCommandContext = (ctx, argv) => {
     extension: '.js',
   };
 
-  const getTemplate = (name, templateOverride, fromTemplate) => {
-    const nameWithExt = `${name}.js`;
+  const getTemplate = (
+    templateName = argv.command,
+    templateOverride = {},
+    fromTemplate = {}
+  ) => {
+    const nameWithExt = `${templateName}.js`;
 
     const templatePath = path.resolve(ctx.templateDir, nameWithExt);
 
@@ -176,13 +180,13 @@ const createCommandContext = (ctx, argv) => {
     };
 
     assert(template.generate, () =>
-      chalk.red(`Template ${name} does not have a generate function`)
+      chalk.red(`Template ${templateName} does not have a generate function`)
     );
 
     return template;
   };
 
-  const getPrintArgs = (template) => {
+  const _getPrintArgs = (template) => {
     const name = template.name(self.name, templateHelpers);
     const fileName = name + template.extension;
 
@@ -200,6 +204,15 @@ const createCommandContext = (ctx, argv) => {
     };
   };
 
+  const getPrintArgs = (
+    templateName = argv.command,
+    templateOverride = {},
+    fromTemplate = {}
+  ) => {
+    const template = getTemplate(templateName, templateOverride, fromTemplate);
+    return _getPrintArgs(template);
+  };
+
   // TODO make (pre -> generate -> post) atomic
   const _generate = async (
     writeFiles,
@@ -208,7 +221,7 @@ const createCommandContext = (ctx, argv) => {
     fromTemplate = {}
   ) => {
     const template = getTemplate(templateName, templateOverride, fromTemplate);
-    const printArgs = getPrintArgs(template);
+    const printArgs = _getPrintArgs(template);
 
     const params = [printArgs, templateHelpers, argv, self];
 
@@ -243,6 +256,7 @@ const createCommandContext = (ctx, argv) => {
     getAuthor,
     getGitUser,
     getTemplate,
+    getPrintArgs,
 
     print,
     string,
