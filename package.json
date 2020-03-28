@@ -3,7 +3,6 @@
   "version": "1.2.0",
   "description": "command-line tool for generating files",
   "main": "src/index.js",
-  "type": "module",
   "scripts": {
     "start": "node bin/pink",
     "format": "yarn f $(git ls-files -c -m | grep '\\.\\(jsx\\?\\|json\\|scss\\)$' | tr '\n' ' ')",
