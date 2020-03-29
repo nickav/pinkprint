@@ -1,6 +1,6 @@
 {
   "name": "pinkprint",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "command-line tool for generating files",
   "main": "src/index.js",
   "scripts": {
