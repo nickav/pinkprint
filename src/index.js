@@ -1,14 +1,9 @@
 const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
+const validFilename = require('valid-filename');
 
-const {
-  assert,
-  getGitUser,
-  getGitRoot,
-  catchAll,
-  requireSafe,
-} = require('./helpers');
+const { assert, getGitUser, getGitRoot, requireSafe } = require('./helpers');
 const { createFs } = require('./fs');
 const { findNearestFileSync, parents } = require('./file-utils');
 const templateHelpers = require('./template-helpers');
@@ -135,9 +130,10 @@ const runList = (exports.runList = (ctx, argv) => {
   );
 });
 
-const normalizePath = (filePath) => filePath.replace(/[\/\\\.]/g, path.sep);
+const normalizePath = (filePath = '') =>
+  filePath.replace(/[\/\\\.]/g, path.sep);
 
-const extractPathAndName = (fullPath) => {
+const extractPathAndName = (fullPath = '') => {
   const parts = fullPath.split(path.sep);
   const name = parts.pop();
   return [parts.join(path.sep), name];
@@ -189,6 +185,10 @@ const createCommandContext = (ctx, argv) => {
   const _getPrintArgs = (template) => {
     const name = template.name(self.name, templateHelpers);
     const fileName = name + template.extension;
+
+    assert(validFilename(fileName), () =>
+      chalk.red(`"${fileName}" is not a valid file name`)
+    );
 
     const relativeName = path.join(template.basePath, self.path, fileName);
 

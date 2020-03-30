@@ -20,6 +20,9 @@ exports.default = {
           `A foo file without a template file named ${args.name}`,
       }),
 
+    // A print that doesn't require name from command line
+    idx: (ctx) => ctx.print(),
+
     // A command with meta information and uses the default fileName function
     helper: {
       description: 'Creates a new helper file',

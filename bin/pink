@@ -57,7 +57,7 @@ const cli = yargs
   )
 
   .command(
-    ['generate <command> <name> [args..]', 'g'],
+    ['generate <command> [name] [args..]', 'g'],
     'Creates files from a pinkprint command',
     commandOptions,
     (argv) => main.runGenerate(ctx, argv)
@@ -85,7 +85,7 @@ Object.keys(commands).forEach((key) => {
   const command = commands[key];
 
   cli.command(
-    [key + ' <name> [args..]'],
+    [key + ' [name] [args..]'],
     command.description || '',
     (yargs) => {
       commandOptions(yargs);
