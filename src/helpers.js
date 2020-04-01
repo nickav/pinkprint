@@ -53,3 +53,25 @@ const requireSafe = (exports.requireSafe = (file, defaultValue = {}) => {
     return defaultValue;
   }
 });
+
+const FILENAME_RESERVED_REGEX = /[<>:"\/\\|?*\x00-\x1F]/g;
+const FILENAME_RESERVED_REGEX_WIN32 = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i;
+
+const isValidFileName = (exports.isValidFileName = (string) => {
+  if (!string || string.length > 255) {
+    return false;
+  }
+
+  if (
+    FILENAME_RESERVED_REGEX.test(string) ||
+    FILENAME_RESERVED_REGEX_WIN32.test(string)
+  ) {
+    return false;
+  }
+
+  if (/^\.\.?$/.test(string)) {
+    return false;
+  }
+
+  return true;
+});

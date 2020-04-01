@@ -26,7 +26,6 @@
     "helper-date": "^1.0.1",
     "humps": "^2.0.0",
     "pluralize": "^8.0.0",
-    "valid-filename": "^3.1.0",
     "yargs": "^15.0.2"
   },
   "devDependencies": {

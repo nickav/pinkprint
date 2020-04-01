@@ -1,9 +1,14 @@
 const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
-const validFilename = require('valid-filename');
 
-const { assert, getGitUser, getGitRoot, requireSafe } = require('./helpers');
+const {
+  assert,
+  getGitUser,
+  getGitRoot,
+  requireSafe,
+  isValidFileName,
+} = require('./helpers');
 const { createFs } = require('./fs');
 const { findNearestFileSync, parents } = require('./file-utils');
 const templateHelpers = require('./template-helpers');
@@ -186,7 +191,7 @@ const createCommandContext = (ctx, argv) => {
     const name = template.name(self.name, templateHelpers);
     const fileName = name + template.extension;
 
-    assert(validFilename(fileName), () =>
+    assert(isValidFileName(fileName), () =>
       chalk.red(`"${fileName}" is not a valid file name`)
     );
 
