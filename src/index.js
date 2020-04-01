@@ -6,8 +6,8 @@ const {
   assert,
   getGitUser,
   getGitRoot,
-  catchAll,
   requireSafe,
+  isValidFileName,
 } = require('./helpers');
 const { createFs } = require('./fs');
 const { findNearestFileSync, parents } = require('./file-utils');
@@ -135,9 +135,10 @@ const runList = (exports.runList = (ctx, argv) => {
   );
 });
 
-const normalizePath = (filePath) => filePath.replace(/[\/\\\.]/g, path.sep);
+const normalizePath = (filePath = '') =>
+  filePath.replace(/[\/\\\.]/g, path.sep);
 
-const extractPathAndName = (fullPath) => {
+const extractPathAndName = (fullPath = '') => {
   const parts = fullPath.split(path.sep);
   const name = parts.pop();
   return [parts.join(path.sep), name];
@@ -189,6 +190,10 @@ const createCommandContext = (ctx, argv) => {
   const _getPrintArgs = (template) => {
     const name = template.name(self.name, templateHelpers);
     const fileName = name + template.extension;
+
+    assert(isValidFileName(fileName), () =>
+      chalk.red(`"${fileName}" is not a valid file name`)
+    );
 
     const relativeName = path.join(template.basePath, self.path, fileName);
 
